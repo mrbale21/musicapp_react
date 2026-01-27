@@ -40,7 +40,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
       case "success":
         return {
           icon: <CheckCircle className="w-5 h-5" />,
-          bg: "bg-gradient-to-r from-emerald-500/20 to-green-500/10",
+          bg: "bg-linear-to-r from-emerald-500/20 to-green-500/10",
           border: "border-l-4 border-emerald-500",
           text: "text-emerald-100",
           iconColor: "text-emerald-400",
@@ -51,7 +51,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
       case "error":
         return {
           icon: <XCircle className="w-5 h-5" />,
-          bg: "bg-gradient-to-r from-rose-500/20 to-red-500/10",
+          bg: "bg-linear-to-r from-rose-500/20 to-red-500/10",
           border: "border-l-4 border-rose-500",
           text: "text-rose-100",
           iconColor: "text-rose-400",
@@ -62,7 +62,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
       case "warning":
         return {
           icon: <AlertCircle className="w-5 h-5" />,
-          bg: "bg-gradient-to-r from-amber-500/20 to-yellow-500/10",
+          bg: "bg-linear-to-r from-amber-500/20 to-yellow-500/10",
           border: "border-l-4 border-amber-500",
           text: "text-amber-100",
           iconColor: "text-amber-400",
@@ -73,7 +73,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
       case "info":
         return {
           icon: <Info className="w-5 h-5" />,
-          bg: "bg-gradient-to-r from-blue-500/20 to-cyan-500/10",
+          bg: "bg-linear-to-r from-blue-500/20 to-cyan-500/10",
           border: "border-l-4 border-blue-500",
           text: "text-blue-100",
           iconColor: "text-blue-400",
@@ -115,14 +115,14 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
           {/* Icon container dengan glow effect */}
           <div
             className={`
-            relative flex-shrink-0
+            relative shrink-0
             ${config.iconBg} 
             rounded-lg p-2
             ring-1 ring-white/10
           `}
           >
             {config.icon}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-lg" />
+            <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent rounded-lg" />
 
             {/* Small accent icon */}
             <div className="absolute -top-1 -right-1">{config.accentIcon}</div>
@@ -137,7 +137,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
               <button
                 onClick={() => removeAlert(alert.id)}
                 className={`
-                  flex-shrink-0 
+                  shrink-0 
                   ${config.iconColor}
                   hover:text-white
                   transition-colors duration-200
@@ -156,7 +156,7 @@ const AlertItem: React.FC<AlertItemProps> = ({ alert }) => {
         {/* Bottom wave decorative element */}
         <div className="absolute bottom-0 left-0 right-0 h-1 opacity-20">
           <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
+            className="absolute inset-0 bg-linear-to-r from-transparent via-white to-transparent"
             style={{
               backgroundSize: "200% 100%",
               animation: "wave 2s linear infinite",

@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Play, Sparkles, X } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
-import { mockRecommendations } from "../utils/mockData";
 import { useNavigate } from "react-router-dom";
 import useApi from "../apis/api";
 import { recommendationHybridApi } from "../apis/endpoints/recommendation";
@@ -47,7 +46,7 @@ const HybridPage: React.FC = () => {
       </div>
 
       <div className="p-4">
-        <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg p-4 mb-6 border border-green-500/30">
+        <div className="bg-linear-to-r from-green-500/20 to-blue-500/20 rounded-lg p-4 mb-6 border border-green-500/30">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-green-400" />
             <h3 className="font-semibold text-white">How it works</h3>

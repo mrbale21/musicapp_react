@@ -2,7 +2,7 @@
 import { useCookies } from "react-cookie";
 import useApi from "../apis/api";
 import { checkTokenApi } from "../apis/endpoints/auth";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { client } from "../apis/client";
 import { useUserData } from "../hooks/zustand";

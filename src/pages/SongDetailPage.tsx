@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Play, Pause, Heart, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Heart, X } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import MusicCard from "../components/PopularCard";
 import type { Song } from "../apis/models/models";
@@ -89,7 +89,7 @@ const SongDetailPage = () => {
           <X className="w-6 h-6 text-white" />
         </button>
 
-        <div className="h-80 flex items-center justify-center bg-gradient-to-b from-zinc-800 to-black">
+        <div className="h-80 flex items-center justify-center bg-linear-to-b from-zinc-800 to-black">
           <img
             src={song.image_url}
             alt={song.title}

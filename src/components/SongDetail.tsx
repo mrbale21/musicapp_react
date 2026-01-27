@@ -7,12 +7,11 @@ const SongDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [song, setSong] = useState<any>(null);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendations, _setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playingSongId, setPlayingSongId] = useState<string | null>(null);
-  const [likedSongs, setLikedSongs] = useState<Set<string>>(new Set());
+  const [likedSongs, _setLikedSongs] = useState<Set<string>>(new Set());
 
   const songById = useApi({ api: songUseApiById });
 
@@ -44,15 +43,6 @@ const SongDetail: React.FC = () => {
     }
   }, [songById.data, songById]);
 
-  const handlePlaySong = (id: string) => {
-    if (playingSongId === id) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setPlayingSongId(id);
-      setIsPlaying(true);
-    }
-  };
-
   const handleToggleLike = () => {
     console.log("okee");
   };
@@ -80,7 +70,7 @@ const SongDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-spotify-dark to-black flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-spotify-dark to-black flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-spinner fa-spin text-4xl text-spotify-green mb-4"></i>
           <h1 className="text-xl text-white">Loading song details...</h1>
@@ -91,7 +81,7 @@ const SongDetail: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-spotify-dark to-black flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-spotify-dark to-black flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
           <h1 className="text-2xl text-white mb-2">Error loading song</h1>
@@ -115,7 +105,7 @@ const SongDetail: React.FC = () => {
 
   if (!song) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-spotify-dark to-black flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-b from-spotify-dark to-black flex items-center justify-center">
         <div className="text-center">
           <i className="fas fa-music text-6xl text-spotify-gray mb-4"></i>
           <h1 className="text-2xl text-white mb-2">Song not found</h1>
@@ -134,9 +124,9 @@ const SongDetail: React.FC = () => {
   const isLiked = likedSongs.has(song.id) || song.is_liked || false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-spotify-dark to-black text-white pb-32">
+    <div className="min-h-screen bg-linear-to-b from-spotify-dark to-black text-white pb-32">
       {/* Back Button */}
-      <div className="sticky top-0 z-40 bg-gradient-to-b from-black/70 to-transparent p-4">
+      <div className="sticky top-0 z-40 bg-linear-to-b from-black/70 to-transparent p-4">
         <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -155,7 +145,7 @@ const SongDetail: React.FC = () => {
               alt={song.title}
               className="w-full aspect-square rounded-2xl object-cover shadow-2xl"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-2xl"></div>
+            <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent rounded-2xl"></div>
           </div>
 
           {/* Song Info */}
@@ -389,7 +379,7 @@ const SongDetail: React.FC = () => {
 
       {/* Fixed Play Bar */}
       {song.preview_url && song.preview_url !== "" && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-linear-to-t from-black to-transparent p-4">
           <div className="bg-spotify-light-dark rounded-xl p-4 max-w-4xl mx-auto shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center">

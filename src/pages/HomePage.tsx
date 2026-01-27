@@ -4,15 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import useApi from "../apis/api";
 import Header from "../components/Header";
-import {
-  TrendingUp,
-  Users,
-  Sparkles,
-  Music,
-  Shuffle,
-  Play,
-  Brain,
-} from "lucide-react";
+import { TrendingUp, Users, Sparkles, Brain } from "lucide-react";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import type { Song, RecommendationItem } from "../apis/models/models"; // Import juga RecommendationItem
 import { songResourceApiYoutube, songsUseApi } from "../apis/endpoints/song";
@@ -45,23 +37,17 @@ const HomePage = () => {
   const contentRecommendApi = useApi({ api: recommendationContentApi });
 
   // Custom Hooks
-  const { play, playNext, isCurrentPlaying } = useMusicPlayer();
-  const {
-    handleLike,
-    handlePlay,
-    handlePlayAndNavigate,
-    isLikeLoading,
-    isPlayLoading,
-    cleanup,
-  } = useSongInteractions({
-    onUpdateSong: (songId, updates) => {
-      setSongs((prev) =>
-        prev.map((song) =>
-          song.id === songId ? { ...song, ...updates } : song,
-        ),
-      );
-    },
-  });
+  const { play, isCurrentPlaying } = useMusicPlayer();
+  const { handleLike, handlePlay, isLikeLoading, isPlayLoading, cleanup } =
+    useSongInteractions({
+      onUpdateSong: (songId, updates) => {
+        setSongs((prev) =>
+          prev.map((song) =>
+            song.id === songId ? { ...song, ...updates } : song,
+          ),
+        );
+      },
+    });
 
   useEffect(() => {
     return () => {
@@ -75,12 +61,12 @@ const HomePage = () => {
   }, [songs]);
 
   // **Function helper untuk extract songs dari recommendations**
-  const extractSongsFromRecommendations = useCallback(
-    (recommendations: RecommendationItem[]): Song[] => {
-      return recommendations.map((rec) => rec.song);
-    },
-    [],
-  );
+  // const extractSongsFromRecommendations = useCallback(
+  //   (recommendations: RecommendationItem[]): Song[] => {
+  //     return recommendations.map((rec) => rec.song);
+  //   },
+  //   [],
+  // );
 
   // **Function helper untuk filter songs with YouTube ID dari recommendations**
   const getSongsWithYouTubeFromRecommendations = useCallback(
@@ -284,40 +270,40 @@ const HomePage = () => {
   );
 
   // **PERBAIKAN: Refresh recommendations**
-  const handleRefreshRecommendations = useCallback(() => {
-    if (player.currentSong) {
-      if (import.meta.env.DEV) {
-        console.log(
-          `🔄 Refreshing recommendations based on: ${player.currentSong.title}`,
-        );
-      }
-      contentRecommendApi.process({ song_id: player.currentSong.id });
+  // const handleRefreshRecommendations = useCallback(() => {
+  //   if (player.currentSong) {
+  //     if (import.meta.env.DEV) {
+  //       console.log(
+  //         `🔄 Refreshing recommendations based on: ${player.currentSong.title}`,
+  //       );
+  //     }
+  //     contentRecommendApi.process({ song_id: player.currentSong.id });
 
-      setTimeout(() => {
-        if (contentBasedRecommendations.length > 0) {
-          const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
-            contentBasedRecommendations.slice(0, 15),
-          );
+  //     setTimeout(() => {
+  //       if (contentBasedRecommendations.length > 0) {
+  //         const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
+  //           contentBasedRecommendations.slice(0, 15),
+  //         );
 
-          if (songsWithYouTube.length > 0) {
-            player.clearQueue();
-            player.addMultipleToQueue(songsWithYouTube);
-            toast.success(
-              `Refreshed queue with ${songsWithYouTube.length} new recommendations!`,
-            );
-          }
-        }
-      }, 1000);
-    } else {
-      toast.info("Play a song first to get recommendations!");
-    }
-  }, [
-    player.currentSong,
-    contentRecommendApi,
-    contentBasedRecommendations,
-    player,
-    getSongsWithYouTubeFromRecommendations,
-  ]);
+  //         if (songsWithYouTube.length > 0) {
+  //           player.clearQueue();
+  //           player.addMultipleToQueue(songsWithYouTube);
+  //           toast.success(
+  //             `Refreshed queue with ${songsWithYouTube.length} new recommendations!`,
+  //           );
+  //         }
+  //       }
+  //     }, 1000);
+  //   } else {
+  //     toast.info("Play a song first to get recommendations!");
+  //   }
+  // }, [
+  //   player.currentSong,
+  //   contentRecommendApi,
+  //   contentBasedRecommendations,
+  //   player,
+  //   getSongsWithYouTubeFromRecommendations,
+  // ]);
 
   const handleAddToQueue = useCallback(
     (song: Song) => {
@@ -328,108 +314,108 @@ const HomePage = () => {
   );
 
   // **PERBAIKAN: Play content-based recommendations**
-  const handlePlayContentBased = useCallback(() => {
-    if (contentBasedRecommendations.length > 0) {
-      const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
-        contentBasedRecommendations.slice(0, 20),
-      );
+  // const handlePlayContentBased = useCallback(() => {
+  //   if (contentBasedRecommendations.length > 0) {
+  //     const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
+  //       contentBasedRecommendations.slice(0, 20),
+  //     );
 
-      if (songsWithYouTube.length === 0) {
-        toast.warning("No recommended songs with YouTube ID available");
-        return;
-      }
+  //     if (songsWithYouTube.length === 0) {
+  //       toast.warning("No recommended songs with YouTube ID available");
+  //       return;
+  //     }
 
-      player.clearQueue();
-      player.addMultipleToQueue(songsWithYouTube);
+  //     player.clearQueue();
+  //     player.addMultipleToQueue(songsWithYouTube);
 
-      if (songsWithYouTube[0]) {
-        player.playSong(songsWithYouTube[0]);
-      }
+  //     if (songsWithYouTube[0]) {
+  //       player.playSong(songsWithYouTube[0]);
+  //     }
 
-      toast.success(
-        `Playing ${songsWithYouTube.length} content-based recommendations!`,
-      );
-    } else {
-      toast.info("No recommendations available yet. Play some songs first!");
-    }
-  }, [
-    contentBasedRecommendations,
-    player,
-    getSongsWithYouTubeFromRecommendations,
-  ]);
+  //     toast.success(
+  //       `Playing ${songsWithYouTube.length} content-based recommendations!`,
+  //     );
+  //   } else {
+  //     toast.info("No recommendations available yet. Play some songs first!");
+  //   }
+  // }, [
+  //   contentBasedRecommendations,
+  //   player,
+  //   getSongsWithYouTubeFromRecommendations,
+  // ]);
 
   // **PERBAIKAN: Shuffle content-based recommendations**
-  const handleShuffleContentBased = useCallback(() => {
-    if (contentBasedRecommendations.length > 0) {
-      const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
-        contentBasedRecommendations.slice(0, 30),
-      );
+  // const handleShuffleContentBased = useCallback(() => {
+  //   if (contentBasedRecommendations.length > 0) {
+  //     const songsWithYouTube = getSongsWithYouTubeFromRecommendations(
+  //       contentBasedRecommendations.slice(0, 30),
+  //     );
 
-      if (songsWithYouTube.length === 0) {
-        toast.warning("No recommended songs with YouTube ID available");
-        return;
-      }
+  //     if (songsWithYouTube.length === 0) {
+  //       toast.warning("No recommended songs with YouTube ID available");
+  //       return;
+  //     }
 
-      player.clearQueue();
-      player.addMultipleToQueue(songsWithYouTube);
-      player.shuffleQueue();
+  //     player.clearQueue();
+  //     player.addMultipleToQueue(songsWithYouTube);
+  //     player.shuffleQueue();
 
-      if (songsWithYouTube[0]) {
-        player.playSong(songsWithYouTube[0]);
-      }
+  //     if (songsWithYouTube[0]) {
+  //       player.playSong(songsWithYouTube[0]);
+  //     }
 
-      toast.success(
-        `Shuffled ${songsWithYouTube.length} content-based recommendations!`,
-      );
-    } else {
-      toast.info("No recommendations available yet. Play some songs first!");
-    }
-  }, [
-    contentBasedRecommendations,
-    player,
-    getSongsWithYouTubeFromRecommendations,
-  ]);
+  //     toast.success(
+  //       `Shuffled ${songsWithYouTube.length} content-based recommendations!`,
+  //     );
+  //   } else {
+  //     toast.info("No recommendations available yet. Play some songs first!");
+  //   }
+  // }, [
+  //   contentBasedRecommendations,
+  //   player,
+  //   getSongsWithYouTubeFromRecommendations,
+  // ]);
 
-  const handlePlayAll = useCallback(() => {
-    const songsWithYouTube = songs
-      .filter((song) => song.youtube_id)
-      .slice(0, 20);
+  // const handlePlayAll = useCallback(() => {
+  //   const songsWithYouTube = songs
+  //     .filter((song) => song.youtube_id)
+  //     .slice(0, 20);
 
-    if (songsWithYouTube.length === 0) {
-      toast.warning("No songs with YouTube ID available");
-      return;
-    }
+  //   if (songsWithYouTube.length === 0) {
+  //     toast.warning("No songs with YouTube ID available");
+  //     return;
+  //   }
 
-    player.clearQueue();
-    player.addMultipleToQueue(songsWithYouTube);
+  //   player.clearQueue();
+  //   player.addMultipleToQueue(songsWithYouTube);
 
-    if (songsWithYouTube[0]) {
-      player.play(songsWithYouTube[0]);
-    }
+  //   if (songsWithYouTube[0]) {
+  //     player.play(songsWithYouTube[0]);
+  //   }
 
-    toast.success(`Added ${songsWithYouTube.length} songs to queue!`);
-  }, [songs, player]);
+  //   toast.success(`Added ${songsWithYouTube.length} songs to queue!`);
+  // }, [songs, player]);
 
-  const handleShuffleAll = useCallback(() => {
-    const songsWithYouTube = songs
-      .filter((song) => song.youtube_id)
-      .slice(0, 30);
+  // const handleShuffleAll = useCallback(() => {
+  //   const songsWithYouTube = songs
+  //     .filter((song) => song.youtube_id)
+  //     .slice(0, 30);
 
-    if (songsWithYouTube.length === 0) {
-      toast.warning("No songs with YouTube ID available");
-      return;
-    }
+  //   if (songsWithYouTube.length === 0) {
+  //     toast.warning("No songs with YouTube ID available");
+  //     return;
+  //   }
 
-    player.clearQueue();
-    player.addMultipleToQueue(songsWithYouTube);
-    player.shuffleQueue();
+  //   player.clearQueue();
+  //   player.addMultipleToQueue(songsWithYouTube);
+  //   player.shuffleQueue();
 
-    if (songsWithYouTube[0]) {
-      player.play(songsWithYouTube[0]);
-    }
+  //   if (songsWithYouTube[0]) {
+  //     player.play(songsWithYouTube[0]);
+  //   }
 
-    toast.success(`Shuffled ${songsWithYouTube.length} songs!`);
-  }, [songs, player]);
+  //   toast.success(`Shuffled ${songsWithYouTube.length} songs!`);
+  // }, [songs, player]);
 
   useEffect(() => {
     const handleFirstInteraction = () => {
@@ -507,13 +493,13 @@ const HomePage = () => {
 
   const songsResult = songs;
   const popularSpongs = popularSongsApi.data?.data.songs ?? [];
-  const contentBasedSongs = extractSongsFromRecommendations(
-    contentBasedRecommendations,
-  );
+  // const contentBasedSongs = extractSongsFromRecommendations(
+  //   contentBasedRecommendations,
+  // );
 
   const popular = popularSpongs.length > 0 ? popularSpongs.slice(0, 4) : [];
-  const contentBased =
-    contentBasedSongs.length > 0 ? contentBasedSongs.slice(0, 8) : [];
+  // const contentBased =
+  //   contentBasedSongs.length > 0 ? contentBasedSongs.slice(0, 8) : [];
   const allSongs =
     songsResult.length > 0 ? songsResult.slice(0, 8) : songs.slice(0, 8);
 
@@ -683,7 +669,7 @@ const HomePage = () => {
               onClick={() => navigate("/collaborative")}
               className="w-full bg-zinc-900/50 hover:bg-zinc-800/50 rounded-lg p-4 flex items-center gap-4 transition-all"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div className="text-left flex-1">
@@ -698,7 +684,7 @@ const HomePage = () => {
               onClick={() => navigate("/hybrid")}
               className="w-full bg-zinc-900/50 hover:bg-zinc-800/50 rounded-lg p-4 flex items-center gap-4 transition-all"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div className="text-left flex-1">

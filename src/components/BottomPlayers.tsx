@@ -7,13 +7,11 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  ListMusic,
   Shuffle,
   Repeat,
   Repeat1,
   ChevronUp,
   ChevronDown,
-  MoreVertical,
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import LikeButton from "./LikedButton";
@@ -41,7 +39,6 @@ const BottomPlayer: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
-  const [showMore, setShowMore] = useState(false);
 
   if (!currentSong) return null;
 

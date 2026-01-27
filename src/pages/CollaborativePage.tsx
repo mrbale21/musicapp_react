@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Play, X } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
-import { mockRecommendations } from "../utils/mockData";
 import { useNavigate } from "react-router-dom";
 import useApi from "../apis/api";
 import { recommendationCollabApi } from "../apis/endpoints/recommendation";

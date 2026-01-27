@@ -1,6 +1,5 @@
-// components/AllSongsCard.tsx (VERSI SMOOTH SIMPLE)
 import React, { useState, useEffect } from "react";
-import { Play, Heart, Pause, Loader2, MoreVertical, Clock } from "lucide-react";
+import { Play, Heart, Pause, Loader2, Clock } from "lucide-react";
 import type { Song } from "../apis/models/models";
 
 interface AllSongsCardProps {
@@ -25,11 +24,8 @@ const AllSongsCard: React.FC<AllSongsCardProps> = ({
   isPlaying = false,
   likeLoading = false,
   playLoading = false,
-  index = 1,
-  showIndex = true,
   compact = false,
 }) => {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [localLikeState, setLocalLikeState] = useState(song.is_liked);
   const [isAnimating, setIsAnimating] = useState(false);
 

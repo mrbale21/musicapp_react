@@ -12,15 +12,14 @@ interface IFormInput {
 }
 
 const LoginForm: React.FC = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [cookies, setCookie] = useCookies(["app_user_token"]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, _setShowPassword] = useState(false);
+  const [_cookies, setCookie] = useCookies(["app_user_token"]);
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: {},
   } = useForm<IFormInput>();
 
   const onLogin = useApi({
@@ -28,7 +27,6 @@ const LoginForm: React.FC = () => {
     onSuccess: (data) => {
       if (!data?.data.token) {
         toast.error("Token tidak ditemukan");
-        setIsLoading(false);
         return;
       }
 
@@ -44,12 +42,9 @@ const LoginForm: React.FC = () => {
         navigate("/", { replace: true });
       } else {
         toast.error("Token tidak ditemukan");
-        setIsLoading(false);
       }
     },
     onFail: (error) => {
-      setIsLoading(false);
-
       const status = error;
 
       if (status === 401) toast.error("Username atau password salah");
@@ -62,8 +57,6 @@ const LoginForm: React.FC = () => {
   });
 
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
-    setIsLoading(true);
-
     const { email, password } = data;
 
     try {
@@ -76,11 +69,9 @@ const LoginForm: React.FC = () => {
           pending: "Memverifikasi akun...",
           success: "Login berhasil! 🎉",
           error: "Username atau password salah",
-        }
+        },
       );
-    } catch (error) {
-      setIsLoading(false);
-    }
+    } catch (error) {}
   };
 
   return (

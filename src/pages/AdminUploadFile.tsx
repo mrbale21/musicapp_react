@@ -1,30 +1,24 @@
 // pages/admin/AdminUploadPage.tsx - VERSI SIMPLE
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Upload,
-  Music,
   FileAudio,
   CheckCircle,
   AlertCircle,
-  BarChart,
   X,
   Plus,
   Search,
 } from "lucide-react";
 import Header from "../components/Header";
-import LoadingSpinner from "../components/common/LoadingSpinner";
 import { useMusicAlert } from "../utils/alerthelpers";
 import {
   songUploadStatsUseApi,
   storeUploadSongRequestApi,
 } from "../apis/endpoints/upload-song";
 import useApi from "../apis/api";
-import { songUsePlaysApi } from "../apis/endpoints/songlike";
 import { songsUseApi } from "../apis/endpoints/song";
 
 const AdminUploadPage = () => {
-  const navigate = useNavigate();
   const musicAlert = useMusicAlert();
 
   // State untuk upload
@@ -36,9 +30,6 @@ const AdminUploadPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
-
-  // State untuk existing songs (opsional, untuk referensi)
-  const [existingSongs, setExistingSongs] = useState<any[]>([]);
 
   const statsUpload = useApi({ api: songUploadStatsUseApi });
   const songApi = useApi({ api: songsUseApi });
@@ -216,14 +207,14 @@ const AdminUploadPage = () => {
           {errorMessage && (
             <div className="bg-red-600/95 backdrop-blur-sm border border-red-500 text-white px-4 py-4 rounded-xl shadow-2xl mb-3">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm mb-1">Error</p>
                   <p className="text-sm leading-relaxed">{errorMessage}</p>
                 </div>
                 <button
                   onClick={() => setErrorMessage("")}
-                  className="flex-shrink-0 w-6 h-6 rounded-full hover:bg-red-700 flex items-center justify-center transition-colors"
+                  className="shrink-0 w-6 h-6 rounded-full hover:bg-red-700 flex items-center justify-center transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -233,14 +224,14 @@ const AdminUploadPage = () => {
           {successMessage && (
             <div className="bg-green-600/95 backdrop-blur-sm border border-green-500 text-white px-4 py-4 rounded-xl shadow-2xl">
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="font-semibold text-sm mb-1">Berhasil</p>
                   <p className="text-sm leading-relaxed">{successMessage}</p>
                 </div>
                 <button
                   onClick={() => setSuccessMessage("")}
-                  className="flex-shrink-0 w-6 h-6 rounded-full hover:bg-green-700 flex items-center justify-center transition-colors"
+                  className="shrink-0 w-6 h-6 rounded-full hover:bg-green-700 flex items-center justify-center transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -254,7 +245,7 @@ const AdminUploadPage = () => {
         {/* Search Section (Opsional) */}
         <div className="bg-zinc-900/30 rounded-xl p-4 md:p-6">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
-            <Search className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <Search className="w-5 h-5 text-blue-400 shrink-0" />
             <h3 className="text-base md:text-lg font-semibold text-white">
               Find Song by ID
             </h3>
@@ -280,8 +271,10 @@ const AdminUploadPage = () => {
         {/* Upload Form - MOBILE OPTIMIZED */}
         <div className="bg-zinc-900/30 rounded-xl p-4 md:p-6">
           <div className="flex items-center gap-3 mb-4 md:mb-6">
-            <Upload className="w-5 md:w-6 h-5 md:h-6 text-green-400 flex-shrink-0" />
-            <h2 className="text-lg md:text-xl font-bold text-white">Upload MP3 File</h2>
+            <Upload className="w-5 md:w-6 h-5 md:h-6 text-green-400 shrink-0" />
+            <h2 className="text-lg md:text-xl font-bold text-white">
+              Upload MP3 File
+            </h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
@@ -344,7 +337,7 @@ const AdminUploadPage = () => {
                 <div className="border border-zinc-700 rounded-xl p-3 md:p-4">
                   <div className="flex items-center justify-between mb-3 md:mb-4 gap-3">
                     <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-linear-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shrink-0">
                         <FileAudio className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -352,16 +345,20 @@ const AdminUploadPage = () => {
                           {mp3File.name}
                         </p>
                         <div className="flex items-center gap-2 text-xs md:text-sm text-zinc-400 flex-wrap">
-                          <span className="truncate">{formatFileSize(mp3File.size)}</span>
+                          <span className="truncate">
+                            {formatFileSize(mp3File.size)}
+                          </span>
                           <span className="hidden sm:inline">•</span>
-                          <span className="hidden sm:inline truncate">{mp3File.type}</span>
+                          <span className="hidden sm:inline truncate">
+                            {mp3File.type}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={removeFile}
-                      className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors flex-shrink-0"
+                      className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors shrink-0"
                       disabled={isUploading}
                     >
                       <X className="w-4 h-4" />
@@ -373,7 +370,7 @@ const AdminUploadPage = () => {
                     <div className="space-y-2">
                       <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-300"
+                          className="h-full bg-linear-to-r from-green-500 to-emerald-500 transition-all duration-300"
                           style={{ width: `${uploadProgress}%` }}
                         />
                       </div>
@@ -401,7 +398,7 @@ const AdminUploadPage = () => {
               <button
                 type="submit"
                 disabled={isUploading || !mp3File || !songId}
-                className="flex-1 px-5 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
+                className="flex-1 px-5 md:px-6 py-2.5 md:py-3 bg-linear-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
               >
                 {isUploading ? (
                   <>
@@ -427,22 +424,27 @@ const AdminUploadPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
                   <span className="text-blue-400 font-bold text-sm">1</span>
                 </div>
-                <h4 className="font-medium text-white text-sm md:text-base">Get Song ID</h4>
+                <h4 className="font-medium text-white text-sm md:text-base">
+                  Get Song ID
+                </h4>
               </div>
               <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
-                Ambil Song ID (UUID) dari database atau buat song baru terlebih dahulu.
+                Ambil Song ID (UUID) dari database atau buat song baru terlebih
+                dahulu.
               </p>
             </div>
 
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-green-900/30 rounded-full flex items-center justify-center shrink-0">
                   <span className="text-green-400 font-bold text-sm">2</span>
                 </div>
-                <h4 className="font-medium text-white text-sm md:text-base">Pilih File MP3</h4>
+                <h4 className="font-medium text-white text-sm md:text-base">
+                  Pilih File MP3
+                </h4>
               </div>
               <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
                 Pilih file .mp3 dari device Anda. Maksimal ukuran file 50MB.
@@ -451,29 +453,38 @@ const AdminUploadPage = () => {
 
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-purple-900/30 rounded-full flex items-center justify-center shrink-0">
                   <span className="text-purple-400 font-bold text-sm">3</span>
                 </div>
-                <h4 className="font-medium text-white text-sm md:text-base">Upload</h4>
+                <h4 className="font-medium text-white text-sm md:text-base">
+                  Upload
+                </h4>
               </div>
               <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
-                Klik upload untuk mengunggah file MP3 ke song. Proses mungkin memakan waktu.
+                Klik upload untuk mengunggah file MP3 ke song. Proses mungkin
+                memakan waktu.
               </p>
             </div>
           </div>
 
           <div className="mt-4 md:mt-6 p-3 md:p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
             <h4 className="font-medium text-yellow-300 mb-2 text-sm md:text-base flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 shrink-0" />
               Catatan Penting
             </h4>
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-yellow-200/80">
               <li className="leading-relaxed">
                 • Song harus sudah ada di database sebelum upload MP3
               </li>
-              <li className="leading-relaxed">• Hanya file .mp3 yang didukung</li>
-              <li className="leading-relaxed">• Nama file sebaiknya tanpa karakter spesial</li>
-              <li className="leading-relaxed">• Upload akan mengganti file MP3 yang sudah ada</li>
+              <li className="leading-relaxed">
+                • Hanya file .mp3 yang didukung
+              </li>
+              <li className="leading-relaxed">
+                • Nama file sebaiknya tanpa karakter spesial
+              </li>
+              <li className="leading-relaxed">
+                • Upload akan mengganti file MP3 yang sudah ada
+              </li>
             </ul>
           </div>
         </div>

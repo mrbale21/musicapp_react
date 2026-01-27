@@ -10,12 +10,7 @@ interface SongCardProps {
   onToggleLike: (songId: string) => void;
 }
 
-const SongCard: React.FC<SongCardProps> = ({
-  song,
-  isPlaying,
-  onPlay,
-  onToggleLike,
-}) => {
+const SongCard: React.FC<SongCardProps> = ({ song }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [localIsPlaying, setLocalIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -57,11 +52,11 @@ const SongCard: React.FC<SongCardProps> = ({
     } else {
       // Fallback ke YouTube atau eksternal
       const searchQuery = encodeURIComponent(
-        `${song.title} ${song.artist} official audio`
+        `${song.title} ${song.artist} official audio`,
       );
       window.open(
         `https://www.youtube.com/results?search_query=${searchQuery}`,
-        "_blank"
+        "_blank",
       );
     }
   };
@@ -92,7 +87,7 @@ const SongCard: React.FC<SongCardProps> = ({
     >
       <div className="flex items-center flex-1">
         {/* Album Cover */}
-        <div className="relative w-12 h-12 rounded-md overflow-hidden mr-4 flex-shrink-0">
+        <div className="relative w-12 h-12 rounded-md overflow-hidden mr-4 shrink-0">
           <img
             src={song.image_url || "https://via.placeholder.com/48"}
             alt={song.title}

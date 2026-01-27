@@ -1,8 +1,7 @@
-// pages/Authorize.tsx
 import { useCookies } from "react-cookie";
 import useApi from "../apis/api";
 import { checkTokenApi } from "../apis/endpoints/auth";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { client } from "../apis/client";
 import { useUserData } from "../hooks/zustand";
@@ -12,8 +11,7 @@ export const Authorize = () => {
   const location = useLocation();
   const { setUser } = useUserData();
   const [cookies, , removeCookie] = useCookies(["app_user_token"]);
-  const [status, setStatus] = useState<"loading" | "ok">("loading");
-  const hasRun = useRef(false);
+  const [status, setStatus] = useState<"loading" | "ok" | "unauth">("loading");
 
   const checkToken = useApi({
     api: checkTokenApi,
@@ -23,36 +21,26 @@ export const Authorize = () => {
       setStatus("ok");
     },
     onFail: () => {
-      removeCookie("app_user_token", {
-        path: "/",
-      });
-
-      localStorage.removeItem("app_user_token");
-      sessionStorage.removeItem("app_user_token");
-
+      removeCookie("app_user_token", { path: "/" });
       delete client.defaults.headers.Authorization;
-
       setUser(null);
-
-      return <Navigate to="/auth" replace />;
+      setStatus("unauth");
     },
   });
 
   useEffect(() => {
-    if (hasRun.current) return;
-    hasRun.current = true;
-
     const token = cookies.app_user_token;
 
     if (!token) {
-      setStatus("ok"); // Allow rendering but will redirect
+      setStatus("unauth");
       return;
     }
 
     client.defaults.headers.Authorization = `Bearer ${token}`;
     checkToken.process({ token });
-  }, []);
+  }, [cookies.app_user_token]);
 
+  // ⏳ Loading
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -61,11 +49,11 @@ export const Authorize = () => {
     );
   }
 
-  // Jika tidak ada token, redirect ke login
-  if (!cookies.app_user_token) {
+  // 🔐 Unauthorized
+  if (status === "unauth") {
     return <Navigate to="/auth" replace state={{ from: location }} />;
   }
 
-  // Jika ada token, render children routes
+  // ✅ Authorized
   return <Outlet />;
 };

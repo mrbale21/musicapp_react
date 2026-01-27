@@ -83,123 +83,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<number | null>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
-
-  // ========== YOUTUBE PLAYER FUNCTIONS ==========
-  const createYouTubePlayer = useCallback(
-    (song: Song) => {
-      if (!song.youtube_id) {
-        console.error("No YouTube ID");
-        return false;
-      }
-
-      // Hancurkan player lama jika ada
-      if (playerRef.current) {
-        playerRef.current.destroy();
-        playerRef.current = null;
-      }
-
-      // Reset state
-      setIsPlayerReady(false);
-      setProgress(0);
-      setCurrentTime(0);
-      setPlaybackError(null); // ⭐ Clear previous errors
-
-      // Buat player baru
-      // Detect mobile untuk autoplay handling
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      playerRef.current = new (window as any).YT.Player("youtube-player", {
-        height: "0",
-        width: "0",
-        videoId: song.youtube_id,
-        playerVars: {
-          autoplay: isMobile ? 0 : 1, // ⭐ Mobile: manual play required
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          iv_load_policy: 3,
-          playsinline: 1,
-          quality: "small",
-          enablejsapi: 1, // ⭐ Enable JS API for better control
-        },
-        events: {
-          onReady: (event: any) => {
-            console.log("YouTube Player Ready");
-            setIsPlayerReady(true);
-            event.target.setVolume(volume);
-            const duration = event.target.getDuration();
-            setDuration(duration);
-
-            // ⭐ Mobile: require manual play, Desktop: auto play
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(
-              navigator.userAgent,
-            );
-            if (!isMobile) {
-              event.target.playVideo();
-              setIsPlaying(true);
-              startProgressTracking();
-            } else {
-              // Mobile: trigger play manually from button
-              console.log("Mobile detected: Please tap play button");
-            }
-          },
-          onStateChange: (event: any) => {
-            console.log("YouTube Player State:", event.data);
-
-            if (event.data === 1) {
-              // Playing
-              setIsPlaying(true);
-              startProgressTracking();
-            } else if (event.data === 2) {
-              // Paused
-              setIsPlaying(false);
-              stopProgressTracking();
-            } else if (event.data === 0) {
-              // Ended
-              console.log("Song ended, auto next...");
-              setIsPlaying(false);
-              setProgress(100);
-              // Auto play next setelah delay
-              setTimeout(() => {
-                handleAutoNext();
-              }, 1000);
-            }
-          },
-          onError: (error: any) => {
-            console.error("YouTube Player Error:", error);
-            console.error("Error code:", error.data);
-
-            // ⭐ Handle common YouTube errors
-            const errorMessages: Record<number, string> = {
-              2: "Invalid video ID",
-              5: "HTML5 player error - video format not supported",
-              100: "Video not found or has been removed",
-              101: "Video owner has restricted playback on this website",
-              150: "Video owner has restricted playback on this website",
-            };
-
-            const errorMsg =
-              errorMessages[error.data] || "Unable to play this song";
-            setPlaybackError(errorMsg);
-
-            if (error.data === 101 || error.data === 150) {
-              console.warn("Video cannot be embedded. Trying next song...");
-              // Auto skip to next song after 2 seconds
-              setTimeout(() => {
-                handleAutoNext();
-              }, 2000);
-            }
-          },
-        },
-      });
-
-      return true;
-    },
-    [volume],
-  );
+  const pendingAutoPlayRef = useRef(false);
+  const handleAutoNextRef = useRef<() => void>(() => {});
 
   // Start progress tracking
   const startProgressTracking = useCallback(() => {
@@ -233,16 +118,139 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Auto play next song
-  const handleAutoNext = useCallback(() => {
-    const nextIndex = getNextIndex();
-    if (nextIndex !== -1) {
-      playAtIndex(nextIndex);
-    } else {
-      console.log("End of queue");
-      setIsPlaying(false);
-    }
-  }, []);
+  // ========== YOUTUBE PLAYER FUNCTIONS ==========
+  const createYouTubePlayer = useCallback(
+    (song: Song) => {
+      if (!song.youtube_id) {
+        console.error("No YouTube ID");
+        return false;
+      }
+
+      // Hancurkan player lama jika ada
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+
+      // Reset state
+      setIsPlayerReady(false);
+      setProgress(0);
+      setCurrentTime(0);
+      setPlaybackError(null); // ⭐ Clear previous errors
+
+      // Buat player baru
+      // Detect mobile untuk autoplay handling
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // Pastikan YouTube IFrame API sudah siap
+      if (!(window as any).YT || !(window as any).YT.Player) {
+        console.warn("YouTube API not ready yet");
+        setPlaybackError("Player is loading, please try again in a moment.");
+        return false;
+      }
+
+      playerRef.current = new (window as any).YT.Player("youtube-player", {
+        height: "0",
+        width: "0",
+        videoId: song.youtube_id,
+        playerVars: {
+          autoplay: isMobile ? 0 : 1, // ⭐ Mobile: manual play required
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3,
+          playsinline: 1,
+          quality: "small",
+          enablejsapi: 1, // ⭐ Enable JS API for better control
+        },
+        events: {
+          onReady: (event: any) => {
+            console.log("YouTube Player Ready");
+            setIsPlayerReady(true);
+            event.target.setVolume(volume);
+            const duration = event.target.getDuration();
+            setDuration(duration);
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(
+              navigator.userAgent,
+            );
+
+            // Jika user sudah menekan tombol play sebelumnya,
+            // jalankan auto-play di semua device (termasuk mobile)
+            if (pendingAutoPlayRef.current) {
+              pendingAutoPlayRef.current = false;
+              event.target.playVideo();
+              setIsPlaying(true);
+              startProgressTracking();
+              return;
+            }
+
+            // Kalau dipanggil dari auto-next / non-interactive, hanya auto-play di desktop
+            if (!isMobile) {
+              event.target.playVideo();
+              setIsPlaying(true);
+              startProgressTracking();
+            } else {
+              console.log("Mobile ready: waiting for user play tap");
+            }
+          },
+          onStateChange: (event: any) => {
+            console.log("YouTube Player State:", event.data);
+
+            if (event.data === 1) {
+              // Playing
+              setIsPlaying(true);
+              startProgressTracking();
+            } else if (event.data === 2) {
+              // Paused
+              setIsPlaying(false);
+              stopProgressTracking();
+            } else if (event.data === 0) {
+              // Ended
+              console.log("Song ended, auto next...");
+              setIsPlaying(false);
+              setProgress(100);
+              // Auto play next setelah delay
+              setTimeout(() => {
+                handleAutoNextRef.current();
+              }, 1000);
+            }
+          },
+          onError: (error: any) => {
+            console.error("YouTube Player Error:", error);
+            console.error("Error code:", error.data);
+
+            // ⭐ Handle common YouTube errors
+            const errorMessages: Record<number, string> = {
+              2: "Invalid video ID",
+              5: "HTML5 player error - video format not supported",
+              100: "Video not found or has been removed",
+              101: "Video owner has restricted playback on this website",
+              150: "Video owner has restricted playback on this website",
+            };
+
+            const errorMsg =
+              errorMessages[error.data] || "Unable to play this song";
+            setPlaybackError(errorMsg);
+
+            if (error.data === 101 || error.data === 150) {
+              console.warn("Video cannot be embedded. Trying next song...");
+              // Auto skip to next song after 2 seconds
+              setTimeout(() => {
+                handleAutoNextRef.current();
+              }, 2000);
+            }
+          },
+        },
+      });
+
+      return true;
+    },
+    [volume, startProgressTracking],
+  );
 
   // ========== PLAYLIST & QUEUE FUNCTIONS ==========
   const getNextIndex = useCallback((): number => {
@@ -304,24 +312,51 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     [queue, createYouTubePlayer],
   );
 
+  // Auto play next song (disimpan di ref agar tidak bikin circular dependency)
+  useEffect(() => {
+    handleAutoNextRef.current = () => {
+      const nextIndex = getNextIndex();
+      if (nextIndex !== -1) {
+        playAtIndex(nextIndex);
+      } else {
+        console.log("End of queue");
+        setIsPlaying(false);
+      }
+    };
+  }, [getNextIndex, playAtIndex]);
+
   // Play single song
   const play = useCallback(
     (song: Song) => {
       console.log("Play song:", song.title);
 
-      // Cek apakah song sudah ada di queue
-      const existingIndex = queue.findIndex((s) => s.id === song.id);
+      setQueue((prevQueue) => {
+        // Cek apakah song sudah ada di queue
+        const existingIndex = prevQueue.findIndex((s) => s.id === song.id);
 
-      if (existingIndex !== -1) {
-        playAtIndex(existingIndex);
-      } else {
-        // Tambah ke queue dan play
-        const newQueue = [...queue, song];
-        setQueue(newQueue);
-        playAtIndex(newQueue.length - 1);
-      }
+        if (existingIndex !== -1) {
+          // Update current index dan song, lalu buat / pakai player
+          setCurrentIndex(existingIndex);
+          const existingSong = prevQueue[existingIndex];
+          setCurrentSong(existingSong);
+          if (existingSong.youtube_id) {
+            createYouTubePlayer(existingSong);
+          }
+          return prevQueue;
+        }
+
+        // Tambah ke queue dan langsung play pada index baru
+        const newQueue = [...prevQueue, song];
+        const newIndex = newQueue.length - 1;
+        setCurrentIndex(newIndex);
+        setCurrentSong(song);
+        if (song.youtube_id) {
+          createYouTubePlayer(song);
+        }
+        return newQueue;
+      });
     },
-    [queue, playAtIndex],
+    [createYouTubePlayer],
   );
 
   // Pause
@@ -345,7 +380,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsPlaying(true);
         startProgressTracking();
       } else if (currentSong.youtube_id) {
-        // Jika player belum ready, buat ulang
+        // Jika player belum ready, buat ulang dan tandai bahwa user minta auto-play
+        pendingAutoPlayRef.current = true;
         createYouTubePlayer(currentSong);
       }
     }

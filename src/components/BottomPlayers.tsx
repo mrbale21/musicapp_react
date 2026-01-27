@@ -33,6 +33,7 @@ const BottomPlayer: React.FC = () => {
     shuffleQueue,
     setRepeatMode,
     isShuffled,
+    playbackError,
   } = usePlayer();
 
   const [volume, setLocalVolume] = useState(80);
@@ -147,6 +148,11 @@ const BottomPlayer: React.FC = () => {
                   </span>
                   <span>{formatTime(currentSong.duration_ms || 0)}</span>
                 </div>
+                {playbackError && (
+                  <div className="mt-1 text-[10px] text-red-400">
+                    {playbackError}
+                  </div>
+                )}
               </div>
             </div>
           </div>

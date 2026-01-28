@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import useApi from "../apis/api";
 import { signInUserApi } from "../apis/endpoints/auth";
 import { useNavigate } from "react-router-dom";
+import { client } from "../apis/client";
 
 interface IFormInput {
   email: string;
@@ -24,24 +25,20 @@ const LoginForm: React.FC = () => {
 
   const onLogin = useApi({
     api: signInUserApi,
+    // LoginForm.tsx
     onSuccess: (data) => {
-      if (!data?.data.token) {
-        toast.error("Token tidak ditemukan");
-        return;
-      }
-
-      if (data) {
-        setCookie("app_user_token", data.data.token, {
+      if (data?.data.token) {
+        const token = data.data.token;
+        setCookie("app_user_token", token, {
           path: "/",
           maxAge: 60 * 60 * 24 * 7,
         });
 
-        toast.success("Login berhasil! 🎉");
+        // TAMBAHKAN INI: Update instance axios secara langsung
+        client.defaults.headers.Authorization = `Bearer ${token}`;
 
-        // Redirect ke home
-        navigate("/", { replace: true });
-      } else {
-        toast.error("Token tidak ditemukan");
+        toast.success("Login berhasil! 🎉");
+        navigate("/home", { replace: true }); // Langsung ke /home agar tidak kena redirect loop
       }
     },
     onFail: (error) => {

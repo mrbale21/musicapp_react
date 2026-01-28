@@ -35,12 +35,8 @@ export const Authorize = () => {
     },
   });
 
+  // Authorize.tsx
   useEffect(() => {
-    // Prevent multiple simultaneous checks
-    if (isCheckingRef.current) {
-      return;
-    }
-
     const token = cookies.app_user_token;
 
     if (!token) {
@@ -48,16 +44,14 @@ export const Authorize = () => {
       return;
     }
 
-    // Set token in client defaults
+    // Gunakan header yang ada atau inject yang baru
     client.defaults.headers.Authorization = `Bearer ${token}`;
-    
-    // Mark as checking and validate token
-    isCheckingRef.current = true;
-    checkToken.process({ token }).catch((error) => {
-      console.error("Error checking token:", error);
-      isCheckingRef.current = false;
-    });
-  }, [cookies.app_user_token]);
+
+    if (!isCheckingRef.current) {
+      isCheckingRef.current = true;
+      checkToken.process({ token });
+    }
+  }, [cookies.app_user_token]); // Token berubah -> Re-check
 
   // ⏳ Loading
   if (status === "loading") {

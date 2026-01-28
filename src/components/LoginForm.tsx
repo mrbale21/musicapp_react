@@ -45,13 +45,8 @@ const LoginForm: React.FC = () => {
       }
     },
     onFail: (error) => {
-      const status = error;
-
-      if (status === 401) toast.error("Username atau password salah");
-      else if (status === 404) toast.error("Kode tenant tidak ditemukan");
-      else if (status === 500) toast.error("Server bermasalah");
-      else toast.error("Terjadi kesalahan, coba lagi");
-
+      // Error handling is done in api.ts, but we can add specific handling here if needed
+      // The error will be automatically handled by the interceptor and api.ts
       throw error; // WAJIB!
     },
   });

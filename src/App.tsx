@@ -23,7 +23,7 @@ export default function App() {
               {/* Public route */}
               <Route path="/auth" element={<LoginForm />} />
 
-              {/* Protected routes */}
+              {/* Protected routes */} 
               <Route element={<Authorize />}>
                 <Route path="/" element={<Navigate to="/home" replace />} />
                 <Route path="/home" element={<HomePage />} />

@@ -505,7 +505,7 @@ const HomePage = () => {
     songsResult.length > 0 ? songsResult.slice(0, 8) : songs.slice(0, 8);
 
   return (
-    <div className="pb-48">
+    <div className="pb-48 bg-gradient-to-b from-gray-900 to-black">
       <Header title="Home" />
 
       <div className="p-3">
@@ -517,79 +517,25 @@ const HomePage = () => {
       </div>
 
       <div className="p-3 space-y-6">
-        {/* Content-Based Recommendations Section */}
-        {/* {contentBased.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-500" />
-                <h2 className="text-lg font-bold text-white">
-                  Recommended For You
-                </h2>
-              </div>
-              <button
-                onClick={handlePlayContentBased}
-                className="text-sm bg-purple-800 hover:bg-purple-700 px-3 py-1 rounded flex items-center gap-1"
-              >
-                <Play className="w-3 h-3" />
-                <span>Play All</span>
-              </button>
-            </div>
-
-            <div className="bg-zinc-900/30 rounded-xl overflow-hidden">
-              {contentBased.map((song, index) => (
-                <div
-                  key={song.id}
-                  onClick={() => handleCardClick(song)}
-                  onContextMenu={(e) => handleSongContextMenu(song, e)}
-                  className="cursor-pointer hover:bg-zinc-800/30 transition-colors"
-                >
-                  <AllSongsCard
-                    song={song}
-                    index={index + 1}
-                    showIndex
-                    isPlaying={isCurrentPlaying(song.id)}
-                    onPlay={(song) => handlePlayOnly(song)}
-                    onLike={handleLikeSong}
-                    likeLoading={isLikeLoading(song.id)}
-                    playLoading={isPlayLoading(song.id)}
-                    showQueueActions
-                    onAddToQueue={() => handleAddToQueue(song)}
-                    onPlayNext={() => player.playNext(song)}
-                    // isRecommended
-                    // recommendationScore={contentBasedRecommendations[index]?.score}
-                    // recommendationExplanation={contentBasedRecommendations[index]?.explanation}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        )} */}
-
         {/* Popular Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
+              <TrendingUp className="w-5 h-5 text-purple-400" />{" "}
+              {/* Ganti warna */}
               <h2 className="text-xl font-bold text-white">Popular Now</h2>
             </div>
             <button
-              onClick={() => {
-                const popularSongs = popularSpongs.slice(0, 10);
-                player.addMultipleToQueue(popularSongs);
-                toast.success(
-                  `Added ${popularSongs.length} popular songs to queue!`,
-                );
-              }}
-              className="text-sm bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded"
+              onClick={() => navigate("/popular")}
+              className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-4 py-2 rounded-xl text-white font-medium transition-all duration-200"
             >
-              Add All to Queue
+              Lihat Semua
             </button>
           </div>
 
           {popular.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-zinc-400">No songs available</p>
+              <p className="text-gray-400">Tidak ada lagu tersedia</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
@@ -621,35 +567,25 @@ const HomePage = () => {
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-500" />
-              <h2 className="text-lg font-bold text-white">Recommended</h2>
+              <Brain className="w-5 h-5 text-purple-400" /> {/* Ganti warna */}
+              <h2 className="text-lg font-bold text-white">Rekomendasi</h2>
             </div>
-            <button
-              onClick={() => {
-                const indoSongs = songsResult.slice(0, 20);
-                player.addMultipleToQueue(indoSongs);
-                toast.success(
-                  `Added ${indoSongs.length} Indonesian songs to queue!`,
-                );
-              }}
-              className="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1 rounded"
-            >
-              Add All to Queue
-            </button>
           </div>
 
           {allSongs.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-zinc-400">No songs available</p>
+              <p className="text-gray-400">Tidak ada lagu tersedia</p>
             </div>
           ) : (
-            <div className="bg-zinc-900/30 rounded-xl overflow-hidden">
+            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 overflow-hidden">
+              {" "}
+              {/* Ganti warna */}
               {allSongs.map((song, index) => (
                 <div
                   key={song.id}
                   onClick={() => handleCardClick(song)}
                   onContextMenu={(e) => handleSongContextMenu(song, e)}
-                  className="cursor-pointer hover:bg-zinc-800/30 transition-colors"
+                  className="cursor-pointer hover:bg-gray-800/30 transition-colors"
                 >
                   <AllSongsCard
                     song={song}
@@ -672,35 +608,39 @@ const HomePage = () => {
 
         {/* Quick Access Section */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-4">Quick Access</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Akses Cepat</h2>
           <div className="space-y-3">
             <button
               onClick={() => navigate("/collaborative")}
-              className="w-full bg-zinc-900/50 hover:bg-zinc-800/50 rounded-lg p-4 flex items-center gap-4 transition-all"
+              className="w-full bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
             >
-              <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
+                {" "}
+                {/* Ganti warna */}
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div className="text-left flex-1">
                 <h3 className="font-semibold text-white">
-                  Collaborative Picks
+                  Rekomendasi Kolaboratif
                 </h3>
-                <p className="text-sm text-zinc-400">Based on similar users</p>
+                <p className="text-sm text-gray-400">
+                  Berdasarkan pengguna serupa
+                </p>
               </div>
             </button>
 
             <button
               onClick={() => navigate("/hybrid")}
-              className="w-full bg-zinc-900/50 hover:bg-zinc-800/50 rounded-lg p-4 flex items-center gap-4 transition-all"
+              className="w-full bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
             >
-              <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
+                {" "}
+                {/* Ganti warna */}
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div className="text-left flex-1">
                 <h3 className="font-semibold text-white">Hybrid Mix</h3>
-                <p className="text-sm text-zinc-400">
-                  AI-powered recommendations
-                </p>
+                <p className="text-sm text-gray-400">Rekomendasi berbasis AI</p>
               </div>
             </button>
           </div>

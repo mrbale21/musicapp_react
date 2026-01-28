@@ -19,9 +19,10 @@ export interface User {
   username: string;
   email: string;
   password?: string; // Usually omitted in responses
-  created_at: string | Date;
-  updated_at: string | Date;
-  deleted_at?: string | Date;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  role: string;
 
   // Relationships
   likes?: UserLike[];

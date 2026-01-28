@@ -11,6 +11,9 @@ import BottomPlayer from "./components/BottomPlayers";
 import { AlertProvider } from "./context/AlertContext";
 import AdminUploadPage from "./pages/AdminUploadFile";
 import RegisterForm from "./components/RegisterForm";
+import ProfilePage from "./pages/ProfilePage";
+import LikedSongsPage from "./pages/LikedSongs";
+import PopularSongsPage from "./pages/PopularSongsPage";
 
 export default function App() {
   return (
@@ -29,6 +32,9 @@ export default function App() {
               <Route path="/song/:id" element={<SongDetailPage />} />
               <Route path="/collaborative" element={<CollaborativePage />} />
               <Route path="/hybrid" element={<HybridPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/like" element={<LikedSongsPage />} />
+              <Route path="/popular" element={<PopularSongsPage />} />
               {/* Tambahkan route admin */}
               <Route path="/admin/upload" element={<AdminUploadPage />} />
             </Route>

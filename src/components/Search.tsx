@@ -271,8 +271,16 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
                 >
                   {/* Album/Thumbnail */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg flex items-center justify-center">
-                      <Music className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg overflow-hidden">
+                      <img
+                        src={song.image_url || "/placeholder-album.jpg"}
+                        alt={song.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/placeholder-album.jpg";
+                        }}
+                      />
                     </div>
                     <button
                       onClick={(e) => handlePlaySong(song, e)}

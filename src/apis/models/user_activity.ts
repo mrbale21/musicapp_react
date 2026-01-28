@@ -17,8 +17,8 @@ export interface UserPlay {
   user_id: number;
   song_id: string;
   play_count: number;
-  last_played: string | Date;
-  created_at: string | Date;
+  last_played: string;
+  created_at: string;
 
   // Relationships
   song?: Song;

@@ -15,63 +15,41 @@ export const client = axios.create({
   },
 });
 
-// Request interceptor: Automatically attach token from cookies
+// Request Interceptor: Menjamin Token terbaru selalu terambil
 client.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Handle FormData
+    const token = getTokenFromCookies();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"];
     }
 
-    // Automatically attach token from cookies if not already set
-    if (!config.headers.Authorization) {
-      const token = getTokenFromCookies();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Response interceptor: Handle 401 and 500 errors globally
+// Response Interceptor: Menangani error secara global
 client.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error: AxiosError) => {
     const status = error.response?.status;
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
 
-    // Handle 401 Unauthorized
+    // Jika 401 (Expired/Invalid), langsung bersihkan dan tendang ke login
     if (status === 401) {
-      // Clear token from cookies
       removeTokenFromCookies();
-
-      // Clear authorization header
-      delete client.defaults.headers.Authorization;
-
-      // Only redirect if not already on auth page and not retrying
-      if (
-        !originalRequest._retry &&
-        !window.location.pathname.includes("/auth")
-      ) {
-        // Store the original URL to redirect back after login
-        sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
+      if (!window.location.pathname.includes("/auth")) {
         window.location.href = "/auth";
       }
     }
 
-    // Handle 500 Internal Server Error
+    // Jika 500, log ke console untuk debugging backend
     if (status === 500) {
-      console.error("Server error:", error.response?.data);
-      // Error will be handled by the component's error handler
+      console.error("🔥 Backend Meledak (500):", error.response?.data);
     }
 
     return Promise.reject(error);

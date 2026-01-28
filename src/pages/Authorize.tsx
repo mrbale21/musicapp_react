@@ -35,23 +35,34 @@ export const Authorize = () => {
     },
   });
 
-  // Authorize.tsx
+  // Di Authorize.tsx
   useEffect(() => {
     const token = cookies.app_user_token;
-
     if (!token) {
       setStatus("unauth");
       return;
     }
 
-    // Gunakan header yang ada atau inject yang baru
-    client.defaults.headers.Authorization = `Bearer ${token}`;
+    const verifyToken = async () => {
+      try {
+        // Pasang header secara paksa ke instance sebelum memproses
+        client.defaults.headers.Authorization = `Bearer ${token}`;
+
+        // Beri sedikit nafas agar cookie/header ter-apply di environment browser
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        await checkToken.process({ token });
+        setStatus("ok");
+      } catch (err) {
+        setStatus("unauth");
+      }
+    };
 
     if (!isCheckingRef.current) {
       isCheckingRef.current = true;
-      checkToken.process({ token });
+      verifyToken();
     }
-  }, [cookies.app_user_token]); // Token berubah -> Re-check
+  }, [cookies.app_user_token]);
 
   // ⏳ Loading
   if (status === "loading") {

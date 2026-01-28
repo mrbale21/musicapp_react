@@ -139,9 +139,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       setPlaybackError(null); // ⭐ Clear previous errors
 
       // Buat player baru
-      // Detect mobile untuk autoplay handling
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
       // Pastikan YouTube IFrame API sudah siap
       if (!(window as any).YT || !(window as any).YT.Player) {
         console.warn("YouTube API not ready yet");
@@ -154,7 +151,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         width: "0",
         videoId: song.youtube_id,
         playerVars: {
-          autoplay: isMobile ? 0 : 1, // ⭐ Mobile: manual play required
+          // Autoplay akan dikontrol lewat pendingAutoPlayRef + event onReady.
+          // Di sini tetap 0 supaya kita punya kontrol penuh dari JS.
+          autoplay: 0,
           controls: 0,
           disablekb: 1,
           fs: 0,
@@ -174,12 +173,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             const duration = event.target.getDuration();
             setDuration(duration);
 
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(
-              navigator.userAgent,
-            );
-
-            // Jika user sudah menekan tombol play sebelumnya,
-            // jalankan auto-play di semua device (termasuk mobile)
+            // Jika fungsi ini dipanggil dari aksi user (klik lagu / tombol play),
+            // pendingAutoPlayRef.current akan true dan kita paksa playVideo
+            // di SEMUA device (termasuk mobile).
             if (pendingAutoPlayRef.current) {
               pendingAutoPlayRef.current = false;
               event.target.playVideo();
@@ -187,15 +183,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
               startProgressTracking();
               return;
             }
-
-            // Kalau dipanggil dari auto-next / non-interactive, hanya auto-play di desktop
-            if (!isMobile) {
-              event.target.playVideo();
-              setIsPlaying(true);
-              startProgressTracking();
-            } else {
-              console.log("Mobile ready: waiting for user play tap");
-            }
+            // Kalau bukan dari aksi user, biarkan diam (akan di-trigger oleh auto-next).
           },
           onStateChange: (event: any) => {
             console.log("YouTube Player State:", event.data);
@@ -329,6 +317,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const play = useCallback(
     (song: Song) => {
       console.log("Play song:", song.title);
+
+      // Tandai bahwa ini aksi langsung dari user → onReady akan auto-play,
+      // menghilangkan delay ekstra (terutama di mobile).
+      pendingAutoPlayRef.current = true;
 
       setQueue((prevQueue) => {
         // Cek apakah song sudah ada di queue

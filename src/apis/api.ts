@@ -105,37 +105,16 @@ const useApi = <T, P>({
               onSuccess(data, ...props);
             } catch (e) {
               setIsLoading(false);
+              onFail(e, ...props);
+              reject(e);
               const error = e as AxiosError;
-              const status = error.response?.status;
               const data = error.response?.data as {
                 message?: string;
               };
               const msg = data?.message;
-
-              // Handle 401 errors silently (will be handled by interceptor)
-              if (status === 401) {
-                onFail(e, ...props);
-                reject(e);
-                // Don't show toast for 401, interceptor will handle redirect
-                return;
+              if (error.response?.status !== 401 && msg) {
+                toast.error(`${msg} - (${error.response?.status ?? 500})`);
               }
-
-              // Show error message for other errors
-              if (msg && status !== 401) {
-                toast.error(`${msg} - (${status ?? 500})`);
-              } else if (!msg && status) {
-                // Fallback error message
-                if (status === 500) {
-                  toast.error("Server error. Please try again later.");
-                } else if (status === 404) {
-                  toast.error("Resource not found.");
-                } else if (status >= 400) {
-                  toast.error(`Request failed (${status})`);
-                }
-              }
-
-              onFail(e, ...props);
-              reject(e);
               return;
             }
 

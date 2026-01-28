@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import useApi from "../apis/api";
 import { signInUserApi } from "../apis/endpoints/auth";
 import { useNavigate } from "react-router-dom";
-import { client } from "../apis/client";
 
 interface IFormInput {
   email: string;
@@ -25,25 +24,34 @@ const LoginForm: React.FC = () => {
 
   const onLogin = useApi({
     api: signInUserApi,
-    // LoginForm.tsx
     onSuccess: (data) => {
-      if (data?.data.token) {
-        const token = data.data.token;
-        setCookie("app_user_token", token, {
+      if (!data?.data.token) {
+        toast.error("Token tidak ditemukan");
+        return;
+      }
+
+      if (data) {
+        setCookie("app_user_token", data.data.token, {
           path: "/",
           maxAge: 60 * 60 * 24 * 7,
         });
 
-        // TAMBAHKAN INI: Update instance axios secara langsung
-        client.defaults.headers.Authorization = `Bearer ${token}`;
-
         toast.success("Login berhasil! 🎉");
-        navigate("/home", { replace: true }); // Langsung ke /home agar tidak kena redirect loop
+
+        // Redirect ke home
+        navigate("/", { replace: true });
+      } else {
+        toast.error("Token tidak ditemukan");
       }
     },
     onFail: (error) => {
-      // Error handling is done in api.ts, but we can add specific handling here if needed
-      // The error will be automatically handled by the interceptor and api.ts
+      const status = error;
+
+      if (status === 401) toast.error("Username atau password salah");
+      else if (status === 404) toast.error("Kode tenant tidak ditemukan");
+      else if (status === 500) toast.error("Server bermasalah");
+      else toast.error("Terjadi kesalahan, coba lagi");
+
       throw error; // WAJIB!
     },
   });

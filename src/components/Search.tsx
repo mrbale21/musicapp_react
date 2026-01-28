@@ -16,17 +16,18 @@ interface SearchComponentProps {
 const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Song[]>([]);
+  const lastQueryRef = useRef<string>("");
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [popularSearches] = useState([
-    "Lagu Indonesia",
-    "Pop Terbaru",
-    "Rock Klasik",
-    "Jazz Relax",
-    "Hip Hop",
-    "Indie",
-  ]);
+  //   const [popularSearches] = useState([
+  //     "Lagu Indonesia",
+  //     "Pop Terbaru",
+  //     "Rock Klasik",
+  //     "Jazz Relax",
+  //     "Hip Hop",
+  //     "Indie",
+  //   ]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,37 +99,33 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
   }, [showResults]);
 
   // Handle search
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
+  const handleSearch = useCallback(
+    async (query: string) => {
+      const q = query.trim();
+      if (!q) return;
 
-    setIsSearching(true);
-    setShowResults(true);
+      // 🔒 STOP kalau query sama
+      if (lastQueryRef.current === q) return;
+      lastQueryRef.current = q;
 
-    try {
-      // Add to recent searches
-      const newRecent = [
-        searchQuery,
-        ...recentSearches.filter((s) => s !== searchQuery),
-      ].slice(0, 5);
-      setRecentSearches(newRecent);
+      setIsSearching(true);
+      setShowResults(true);
 
-      // Call search API
-      await searchApi.process({ q: searchQuery });
-    } catch (error) {
-      console.error("Search error:", error);
-    }
-  }, [searchQuery, recentSearches, searchApi]);
+      // update recent searches (AMAN)
+      setRecentSearches((prev) =>
+        [q, ...prev.filter((s) => s !== q)].slice(0, 5),
+      );
+
+      await searchApi.process({ q });
+    },
+    [searchApi],
+  );
 
   useEffect(() => {
-    const q = searchQuery.trim();
-    if (!q) return;
+    if (!searchQuery.trim()) return;
 
     const t = setTimeout(() => {
-      handleSearch();
+      handleSearch(searchQuery);
     }, 400);
 
     return () => clearTimeout(t);
@@ -140,14 +137,15 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
       const value = e.target.value;
       setSearchQuery(value);
 
-      if (value.trim()) {
-        setShowResults(true);
-      } else {
+      if (!value.trim()) {
         setSearchResults([]);
         setShowResults(false);
+        lastQueryRef.current = ""; // reset guard
+      } else {
+        setShowResults(true);
       }
     },
-    [handleSearch],
+    [],
   );
 
   // Handle clear search
@@ -203,20 +201,20 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
     (term: string) => {
       setSearchQuery(term);
       searchInputRef.current?.focus();
-      setTimeout(() => handleSearch(), 100);
+      setTimeout(() => handleSearch(term), 100);
     },
     [handleSearch],
   );
 
   // Handle popular search click
-  const handlePopularSearchClick = useCallback(
-    (term: string) => {
-      setSearchQuery(term);
-      searchInputRef.current?.focus();
-      setTimeout(() => handleSearch(), 100);
-    },
-    [handleSearch],
-  );
+  //   const handlePopularSearchClick = useCallback(
+  //     (term: string) => {
+  //       setSearchQuery(term);
+  //       searchInputRef.current?.focus();
+  //       setTimeout(() => handleSearch(), 100);
+  //     },
+  //     [handleSearch],
+  //   );
 
   return (
     <div className="w-full relative" ref={searchContainerRef}>
@@ -362,7 +360,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
               )}
 
               {/* Popular Searches */}
-              <div>
+              {/* <div>
                 <h3 className="text-sm font-medium text-gray-300 mb-2">
                   Pencarian Populer
                 </h3>
@@ -377,7 +375,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
                     </button>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
         </div>

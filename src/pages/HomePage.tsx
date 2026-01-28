@@ -17,6 +17,7 @@ import {
   recommendationPopularApi,
 } from "../apis/endpoints/recommendation";
 import { usePlayer } from "../context/PlayerContext";
+import SearchComponent from "../components/Search";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -506,6 +507,14 @@ const HomePage = () => {
   return (
     <div className="pb-48">
       <Header title="Home" />
+
+      <div className="p-3">
+        <SearchComponent
+          onSongClick={(song) => {
+            navigate(`/song/${song.id}`);
+          }}
+        />
+      </div>
 
       <div className="p-3 space-y-6">
         {/* Content-Based Recommendations Section */}

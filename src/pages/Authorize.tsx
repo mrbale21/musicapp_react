@@ -40,7 +40,6 @@ export const Authorize = () => {
     checkToken.process({ token });
   }, [cookies.app_user_token]);
 
-  // ⏳ Loading
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -49,7 +48,6 @@ export const Authorize = () => {
     );
   }
 
-  // 🔐 Unauthorized
   if (status === "unauth") {
     return <Navigate to="/auth" replace state={{ from: location }} />;
   }

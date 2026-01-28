@@ -10,6 +10,7 @@ import { Authorize } from "./pages/Authorize";
 import BottomPlayer from "./components/BottomPlayers";
 import { AlertProvider } from "./context/AlertContext";
 import AdminUploadPage from "./pages/AdminUploadFile";
+import RegisterForm from "./components/RegisterForm";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Routes>
             {/* Public route */}
             <Route path="/auth" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
 
             {/* Protected routes */}
             <Route element={<Authorize />}>

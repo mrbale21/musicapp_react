@@ -1,5 +1,9 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { getTokenFromCookies, removeTokenFromCookies } from "../utils/tokenHelper";
+import axios, { AxiosError } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+import {
+  getTokenFromCookies,
+  removeTokenFromCookies,
+} from "../utils/tokenHelper";
 
 const BASE_URL = import.meta.env.VITE_CLIENT_URL || "http://localhost:8080";
 
@@ -31,7 +35,7 @@ client.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor: Handle 401 and 500 errors globally
@@ -49,12 +53,15 @@ client.interceptors.response.use(
     if (status === 401) {
       // Clear token from cookies
       removeTokenFromCookies();
-      
+
       // Clear authorization header
       delete client.defaults.headers.Authorization;
-      
+
       // Only redirect if not already on auth page and not retrying
-      if (!originalRequest._retry && !window.location.pathname.includes("/auth")) {
+      if (
+        !originalRequest._retry &&
+        !window.location.pathname.includes("/auth")
+      ) {
         // Store the original URL to redirect back after login
         sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
         window.location.href = "/auth";
@@ -68,5 +75,5 @@ client.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

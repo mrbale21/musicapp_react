@@ -33,20 +33,12 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
   // API untuk search
   const searchApi = useApi({
     api: searchSongsApi,
-    onSuccess: (data) => {
-      if (Array.isArray(data)) {
-        setSearchResults(data);
-      } else if (data && data.data && Array.isArray(data.data)) {
-        setSearchResults(data.data);
-      } else if (data && data && Array.isArray(data)) {
-        setSearchResults(data);
-      } else if (data && data.data && Array.isArray(data.data)) {
-        setSearchResults(data.data);
-      } else {
-        setSearchResults([]);
-      }
+    onSuccess: (res) => {
+      setSearchResults(Array.isArray(res?.data) ? res.data : []);
+
       setIsSearching(false);
     },
+
     onFail: (error) => {
       console.error("Search error:", error);
       toast.error("Gagal melakukan pencarian");
@@ -125,11 +117,22 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
       setRecentSearches(newRecent);
 
       // Call search API
-      await searchApi.process({ query: searchQuery });
+      await searchApi.process({ q: searchQuery });
     } catch (error) {
       console.error("Search error:", error);
     }
   }, [searchQuery, recentSearches, searchApi]);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) return;
+
+    const t = setTimeout(() => {
+      handleSearch();
+    }, 400);
+
+    return () => clearTimeout(t);
+  }, [searchQuery, handleSearch]);
 
   // Handle input change with debounce
   const handleInputChange = useCallback(
@@ -139,7 +142,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
 
       if (value.trim()) {
         setShowResults(true);
-        handleSearch();
       } else {
         setSearchResults([]);
         setShowResults(false);

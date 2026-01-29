@@ -32,11 +32,11 @@ const LikedSongsPage = () => {
   // API
   const likedSongsApi = useApi({
     api: songUseLikesApi,
-    onSuccess: (data) => {
-      if (data?.data) {
-        const mappedSongs: Song[] = data.data.map((s: any) => ({
-          ...s,
-          is_liked: s.is_liked === "1" || s.is_liked === true,
+    onSuccess: (res) => {
+      if (res?.data) {
+        const mappedSongs: Song[] = res.data.map((item: any) => ({
+          ...item.song,
+          is_liked: true,
         }));
 
         setSongs(mappedSongs);

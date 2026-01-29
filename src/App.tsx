@@ -14,6 +14,7 @@ import RegisterForm from "./components/RegisterForm";
 import ProfilePage from "./pages/ProfilePage";
 import LikedSongsPage from "./pages/LikedSongs";
 import PopularSongsPage from "./pages/PopularSongsPage";
+import RecentSongPage from "./pages/RecentPlays";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/hybrid" element={<HybridPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/like" element={<LikedSongsPage />} />
+              <Route path="/play" element={<RecentSongPage />} />
               <Route path="/popular" element={<PopularSongsPage />} />
               {/* Tambahkan route admin */}
               <Route path="/admin/upload" element={<AdminUploadPage />} />

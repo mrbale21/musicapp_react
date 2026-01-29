@@ -9,16 +9,20 @@ import {
   Heart,
   Crown,
   LogOut,
-  Settings,
   ChevronRight,
   Star,
   Clock,
 } from "lucide-react";
 import { useUserData } from "../hooks/zustand";
+import { useEffect } from "react";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUserData();
+
+  useEffect(() => {
+    user;
+  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -58,6 +62,14 @@ const ProfilePage: React.FC = () => {
     // Redirect ke login
     navigate("/auth", { replace: true });
   };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-white">
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-900 via-purple-900/20 to-black pb-32 relative overflow-hidden">
@@ -274,7 +286,7 @@ const ProfilePage: React.FC = () => {
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </button>
 
-              {user?.role === "admin" && (
+              {/* {user?.role === "admin" && (
                 <button
                   onClick={() => navigate("/admin/upload")}
                   className="w-full flex items-center justify-between p-3 bg-black/40 rounded-xl border border-yellow-500/20 hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-900/20 transition-all duration-200"
@@ -287,7 +299,7 @@ const ProfilePage: React.FC = () => {
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </button>
-              )}
+              )} */}
             </div>
           </div>
 

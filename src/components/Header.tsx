@@ -102,10 +102,8 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const confirmLogout = () => {
-    // 1️⃣ Hapus cookie auth
     removeCookie("app_user_token", { path: "/" });
 
-    // 2️⃣ Hapus localStorage
     const keysToRemove = [
       "recent_searches",
       "user_played_songs",
@@ -116,10 +114,8 @@ const Header: React.FC<HeaderProps> = ({
 
     keysToRemove.forEach((key) => localStorage.removeItem(key));
 
-    // 3️⃣ Clear semua session storage
     sessionStorage.clear();
 
-    // 4️⃣ Redirect ke auth page
     navigate("/auth", { replace: true });
     setShowConfirm(false);
   };
@@ -132,7 +128,6 @@ const Header: React.FC<HeaderProps> = ({
     navigate("/profile");
   };
 
-  // Profile icon dengan efek modern
   const ProfileIcon = () => (
     <button
       onClick={handleProfileClick}

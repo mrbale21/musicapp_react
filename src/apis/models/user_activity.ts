@@ -1,5 +1,10 @@
 import type { Song } from "./song";
 
+export interface UserLikesResponse {
+  status: "success" | "error";
+  message: string;
+  data: UserLike[];
+}
 // models/UserLike.ts
 export interface UserLike {
   id: number;

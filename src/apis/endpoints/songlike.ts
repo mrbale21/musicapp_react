@@ -1,7 +1,8 @@
 import { client } from "../client";
 import type { SongsRes } from "../models/song";
+import type { UserLikesResponse } from "../models/user_activity";
 
-export function songUseLikesApi(): Promise<SongsRes> {
+export function songUseLikesApi(): Promise<UserLikesResponse> {
   return client.get(`/user/likes`).then((response) => response.data);
 }
 

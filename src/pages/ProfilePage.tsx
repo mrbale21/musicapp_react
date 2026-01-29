@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import {
@@ -14,18 +13,7 @@ import { useUserData } from "../hooks/zustand";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useUserData();
-
-  // Simulasi fetch data user
-  useEffect(() => {
-    const fetchuser = async () => {
-      setIsLoading(true);
-      // Simulasi API call
-    };
-
-    fetchuser();
-  }, []);
 
   const handleBack = () => {
     navigate(-1);
@@ -50,24 +38,24 @@ const ProfilePage: React.FC = () => {
     navigate("/play-history");
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
-        <Header
-          title="Profile"
-          showBack
-          onBack={handleBack}
-          showProfileIcon={false}
-        />
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-linear-to-b from-gray-900 to-black">
+  //       <Header
+  //         title="Profile"
+  //         showBack
+  //         onBack={handleBack}
+  //         showProfileIcon={false}
+  //       />
+  //       <div className="flex items-center justify-center min-h-[80vh]">
+  //         <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="min-h-screen bg-linear-to-b from-gray-900 to-black text-white">
       <Header
         title="Profile"
         showBack
@@ -81,7 +69,7 @@ const ProfilePage: React.FC = () => {
         <div className="bg-black/40 backdrop-blur-sm rounded-2xl border border-gray-800 p-6 mb-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full blur opacity-70"></div>
+              <div className="absolute -inset-1 bg-linear-to-r from-purple-600 to-pink-500 rounded-full blur opacity-70"></div>
               <div className="relative w-20 h-20 rounded-full bg-gray-900 flex items-center justify-center border border-purple-500/30">
                 <User className="w-10 h-10 text-purple-400" />
               </div>
@@ -93,7 +81,7 @@ const ProfilePage: React.FC = () => {
                   {user?.username}
                 </h2>
                 {user?.role === "admin" && (
-                  <div className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-500 px-2 py-0.5 rounded-full">
+                  <div className="flex items-center gap-1 bg-linear-to-r from-purple-600 to-pink-500 px-2 py-0.5 rounded-full">
                     <Crown className="w-3 h-3 text-yellow-300" />
                     <span className="text-xs font-semibold">Admin</span>
                   </div>

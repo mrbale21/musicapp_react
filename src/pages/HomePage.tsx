@@ -505,7 +505,7 @@ const HomePage = () => {
     songsResult.length > 0 ? songsResult.slice(0, 8) : songs.slice(0, 8);
 
   return (
-    <div className="pb-48 bg-gradient-to-b from-gray-900 to-black">
+    <div className="pb-48 bg-linear-to-b from-gray-900 to-black">
       <Header title="Home" />
 
       <div className="p-3">
@@ -527,7 +527,7 @@ const HomePage = () => {
             </div>
             <button
               onClick={() => navigate("/popular")}
-              className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-4 py-2 rounded-xl text-white font-medium transition-all duration-200"
+              className="text-sm bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-4 py-2 rounded-xl text-white font-medium transition-all duration-200"
             >
               Lihat Semua
             </button>
@@ -612,9 +612,9 @@ const HomePage = () => {
           <div className="space-y-3">
             <button
               onClick={() => navigate("/collaborative")}
-              className="w-full bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
+              className="w-full bg-linear-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
                 {" "}
                 {/* Ganti warna */}
                 <Users className="w-6 h-6 text-white" />
@@ -631,9 +631,9 @@ const HomePage = () => {
 
             <button
               onClick={() => navigate("/hybrid")}
-              className="w-full bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
+              className="w-full bg-linear-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 rounded-xl p-4 flex items-center gap-4 transition-all duration-200 border border-purple-500/20"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center">
                 {" "}
                 {/* Ganti warna */}
                 <Sparkles className="w-6 h-6 text-white" />

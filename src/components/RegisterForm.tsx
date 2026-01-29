@@ -74,7 +74,7 @@ const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-5 bg-gradient-to-br from-gray-900 via-purple-900/20 to-black relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-5 bg-linear-to-br from-gray-900 via-purple-900/20 to-black relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 w-60 h-60 bg-purple-600/30 rounded-full blur-3xl animate-pulse"></div>
@@ -112,14 +112,14 @@ const RegisterForm: React.FC = () => {
         {/* Header Section */}
         <div className="text-center mb-6">
           <div className="relative inline-block mb-4">
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-500 rounded-2xl blur opacity-70 animate-pulse"></div>
+            <div className="absolute -inset-1 bg-linear-to-r from-purple-600 to-pink-500 rounded-2xl blur opacity-70 animate-pulse"></div>
             <div className="relative w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-purple-500/30 shadow-lg">
-              <i className="fas fa-user-plus text-2xl bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent"></i>
+              <i className="fas fa-user-plus text-2xl bg-linear-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent"></i>
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-ping"></div>
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent mb-1">
+          <h1 className="text-2xl font-bold bg-linear-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent mb-1">
             Daftar SoundWave
           </h1>
           <p className="text-gray-400 text-sm">
@@ -143,7 +143,7 @@ const RegisterForm: React.FC = () => {
             {/* Email Input */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-linear-to-r from-purple-500 to-pink-500"></div>
                 <label className="text-sm font-medium text-gray-300">
                   Email
                 </label>
@@ -175,7 +175,7 @@ const RegisterForm: React.FC = () => {
             {/* Username Input */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-linear-to-r from-purple-500 to-pink-500"></div>
                 <label className="text-sm font-medium text-gray-300">
                   Username
                 </label>
@@ -219,7 +219,7 @@ const RegisterForm: React.FC = () => {
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-linear-to-r from-purple-500 to-pink-500"></div>
                   <label className="text-sm font-medium text-gray-300">
                     Password
                   </label>
@@ -283,7 +283,7 @@ const RegisterForm: React.FC = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-linear-to-r from-purple-500 to-pink-500"></div>
                   <label className="text-sm font-medium text-gray-300">
                     Konfirmasi Password
                   </label>
@@ -338,7 +338,7 @@ const RegisterForm: React.FC = () => {
               disabled={isLoading}
               className="w-full relative overflow-hidden group mb-4"
             >
-              <div className="relative w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2">
+              <div className="relative w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2">
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -382,14 +382,14 @@ const RegisterForm: React.FC = () => {
         {/* <div className="text-center">
           <div className="inline-flex items-center gap-4 px-4 py-3 bg-black/40 backdrop-blur-sm rounded-xl border border-purple-500/10">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                 <i className="fas fa-music text-purple-400 text-xs"></i>
               </div>
               <span className="text-xs text-gray-300">Playlist Personal</span>
             </div>
             <div className="w-px h-6 bg-gray-800"></div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                 <i className="fas fa-star text-purple-400 text-xs"></i>
               </div>
               <span className="text-xs text-gray-300">Rekomendasi Premium</span>
@@ -411,7 +411,7 @@ const RegisterForm: React.FC = () => {
       </div>
 
       {/* Bottom Glow */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-transparent via-purple-500 to-transparent"></div>
     </div>
   );
 };

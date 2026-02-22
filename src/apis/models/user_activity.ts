@@ -24,9 +24,7 @@ export interface UserPlay {
   play_count: number;
   last_played: string;
   created_at: string;
-
-  // Relationships
-  song?: Song;
+  song: Song;
 }
 
 // models/RecommendationScore.ts

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { ChevronLeft, User, LogOut, X, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronLeft, User, LogOut,  Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import ConfirmAlert from "./common/ConfirmAlert";
 
 interface HeaderProps {
   title: string;
@@ -11,80 +12,8 @@ interface HeaderProps {
   showProfileIcon?: boolean;
 }
 
-interface ConfirmAlertProps {
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
 
-// Custom Confirm Alert Component
-const ConfirmAlert: React.FC<ConfirmAlertProps> = ({
-  title,
-  message,
-  onConfirm,
-  onCancel,
-}) => {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm">
-        {/* Background Glow */}
-        <div className="absolute -inset-1 bg-linear-to-r from-red-600 to-pink-500 rounded-2xl blur opacity-30"></div>
 
-        <div className="relative bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-red-500/30 shadow-2xl shadow-red-900/20 p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-900/30 rounded-xl">
-                <AlertCircle className="w-6 h-6 text-red-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">{title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
-                  <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse delay-100"></div>
-                  <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse delay-200"></div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={onCancel}
-              className="p-1 hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
-          </div>
-
-          {/* Message */}
-          <p className="text-gray-300 mb-6">{message}</p>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={onCancel}
-              className="flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-xl transition-all duration-200 active:scale-[0.98]"
-            >
-              Batal
-            </button>
-
-            <button
-              onClick={onConfirm}
-              className="flex-1 relative overflow-hidden group py-3 px-4 rounded-xl transition-all duration-200 active:scale-[0.98]"
-            >
-              <div className="absolute inset-0 bg-linear-to-r from-red-600 to-pink-500"></div>
-              <div className="absolute inset-0 bg-linear-to-r from-red-500 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="relative flex items-center justify-center gap-2 text-white font-semibold">
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Header: React.FC<HeaderProps> = ({
   title,
@@ -94,7 +23,8 @@ const Header: React.FC<HeaderProps> = ({
   showProfileIcon = true,
 }) => {
   const navigate = useNavigate();
-  const [_, _setCookie, removeCookie] = useCookies(["app_user_token"]);
+  const location = useLocation();
+  const [_, __, removeCookie] = useCookies(["app_user_token"]);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleLogout = () => {
@@ -113,7 +43,6 @@ const Header: React.FC<HeaderProps> = ({
     ];
 
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-
     sessionStorage.clear();
 
     navigate("/auth", { replace: true });
@@ -128,6 +57,10 @@ const Header: React.FC<HeaderProps> = ({
     navigate("/profile");
   };
 
+  const handleHomeClick = () => {
+    navigate("/");
+  };
+
   const ProfileIcon = () => (
     <button
       onClick={handleProfileClick}
@@ -136,57 +69,95 @@ const Header: React.FC<HeaderProps> = ({
     >
       <div className="relative">
         <div className="absolute -inset-1 bg-linear-to-r from-purple-600 to-pink-500 rounded-full blur opacity-0 group-hover:opacity-70 transition-opacity duration-300"></div>
-        <User className="relative w-5 h-5 text-white" />
-      </div>
-      <div className="absolute -bottom-8 right-0 bg-black/90 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-        Profile
+        <div className="relative w-8 h-8 bg-linear-to-r from-purple-600 to-pink-500 rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200">
+          <User className="w-4 h-4 text-white" />
+        </div>
       </div>
     </button>
   );
 
-  // Logout button
   const LogoutButton = () => (
     <button
       onClick={handleLogout}
-      className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-colors duration-200 group"
+      className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
       aria-label="Logout"
     >
-      <LogOut className="w-5 h-5 text-gray-300 group-hover:text-red-400 transition-colors" />
-      <div className="absolute -bottom-8 right-0 bg-black/90 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+      <div className="relative">
+        <div className="absolute -inset-1 bg-linear-to-r from-red-600 to-pink-500 rounded-lg blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+        <LogOut className="relative w-5 h-5 text-gray-300 group-hover:text-pink-400 group-hover:rotate-12 transition-all duration-200" />
+      </div>
+
+      {/* Tooltip */}
+      <div className="absolute -bottom-8 right-0 bg-gray-900 text-white text-xs py-1 px-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-pink-500/30 shadow-lg shadow-pink-500/20">
         Logout
+      </div>
+    </button>
+  );
+
+  const HomeButton = () => (
+    <button
+      onClick={handleHomeClick}
+      className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
+      aria-label="Home"
+    >
+      <div className="relative">
+        <div className="absolute -inset-1 bg-linear-to-r from-purple-600 to-pink-500 rounded-lg blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+        <Home className="relative w-5 h-5 text-gray-300 group-hover:text-purple-400 transition-colors" />
       </div>
     </button>
   );
 
   return (
     <>
-      <div className="sticky top-0 bg-black/95 backdrop-blur-sm z-40 p-4 border-b border-gray-800 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {showBack && onBack && (
-            <button
-              onClick={onBack}
-              className="p-1.5 hover:bg-gray-800/50 rounded-lg transition-colors duration-200 group relative"
-              aria-label="Go back"
-            >
-              <ChevronLeft className="w-6 h-6 text-white" />
-              <div className="absolute -bottom-8 left-0 bg-black/90 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Back
-              </div>
-            </button>
-          )}
-          <h1 className="text-xl font-bold text-white">{title}</h1>
+      <header className="sticky top-0 z-40">
+        {/* Glassmorphism background with linear */}
+        <div className="absolute inset-0 bg-linear-to-r from-purple-900/30 via-gray-900/95 to-pink-900/30 backdrop-blur-xl border-b border-purple-500/20"></div>
+
+        {/* Animated linear line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-purple-500 to-transparent"></div>
+
+        {/* Content */}
+        <div className="relative px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {showBack && onBack ? (
+              <button
+                onClick={onBack}
+                className="relative p-2 hover:bg-gray-800/50 rounded-lg transition-all duration-200 group"
+                aria-label="Go back"
+              >
+                <div className="absolute -inset-1 bg-linear-to-r from-purple-600 to-pink-500 rounded-lg blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                <ChevronLeft className="relative w-5 h-5 text-white group-hover:-translate-x-0.5 transition-transform" />
+
+                {/* Tooltip */}
+                <div className="absolute -bottom-8 left-0 bg-gray-900 text-white text-xs py-1 px-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-purple-500/30 shadow-lg shadow-purple-500/20">
+                  Back
+                </div>
+              </button>
+            ) : (
+              <HomeButton />
+            )}
+
+            {/* Title with linear */}
+            <h1 className="text-xl font-bold bg-linear-to-r from-purple-400 via-white to-pink-400 bg-clip-text text-transparent">
+              {title}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {rightElement}
+
+            {/* Dynamic buttons based on route */}
+            {location.pathname === "/profile" ? (
+              <>
+                <LogoutButton />
+                {showProfileIcon && <ProfileIcon />}
+              </>
+            ) : (
+              showProfileIcon && <ProfileIcon />
+            )}
+          </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {rightElement}
-
-          {/* Logout button hanya muncul di halaman profile */}
-          {window.location.pathname === "/profile" && <LogoutButton />}
-
-          {/* Profile icon muncul jika prop showProfileIcon true */}
-          {showProfileIcon && <ProfileIcon />}
-        </div>
-      </div>
+      </header>
 
       {/* Custom Confirm Alert */}
       {showConfirm && (

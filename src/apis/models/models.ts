@@ -102,3 +102,22 @@ export interface ApiResponse<T = any> {
   message: string;
   data: T;
 }
+
+export type PlaysResponse = ApiResponse<PlayItem[]>;
+
+// Response untuk songs biasa
+export interface SongsRes {
+  mp3_file?: File | string;
+  song_id?: string;
+  data: Song[];
+}
+
+export interface PlayItem {
+  id: number;
+  user_id: number;
+  song_id: string;
+  play_count: number;
+  last_played: string;
+  created_at: string;
+  song: Song;
+}

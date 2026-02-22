@@ -9,6 +9,8 @@ import React, {
   useMemo,
 } from "react";
 import type { Song } from "../apis/models/models";
+import { songResourceApiYoutube } from "../apis/endpoints/song";
+import { recommendationContentApi } from "../apis/endpoints/recommendation";
 
 interface PlayerContextType {
   // State
@@ -85,6 +87,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const pendingAutoPlayRef = useRef(false);
   const handleAutoNextRef = useRef<() => void>(() => {});
+  const searchedSongsRef = useRef<Set<string>>(new Set()); // Track searched songs
+  const createYouTubePlayerRef = useRef<(song: Song) => boolean>(() => false); // Ref untuk avoid circular deps
+  const currentRecommendationsRef = useRef<string>(""); // Track current song for recommendations
 
   // Start progress tracking
   const startProgressTracking = useCallback(() => {
@@ -126,9 +131,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         return false;
       }
 
-      // Hancurkan player lama jika ada
+      // ⭐ AGGRESSIVE CLEANUP - Stop dan destroy player lama dulu
+      console.log(`Destroying old player for new song: ${song.title}`);
       if (playerRef.current) {
-        playerRef.current.destroy();
+        try {
+          // Stop playback immediately
+          playerRef.current.stopVideo?.();
+          playerRef.current.pauseVideo?.();
+        } catch (e) {
+          console.warn("Error stopping old player:", e);
+        }
+
+        try {
+          // Properly destroy
+          playerRef.current.destroy?.();
+        } catch (e) {
+          console.warn("Error destroying old player:", e);
+        }
+
         playerRef.current = null;
       }
 
@@ -136,7 +156,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsPlayerReady(false);
       setProgress(0);
       setCurrentTime(0);
-      setPlaybackError(null); // ⭐ Clear previous errors
+      setPlaybackError(null);
 
       // Buat player baru
       // Pastikan YouTube IFrame API sudah siap
@@ -146,13 +166,15 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         return false;
       }
 
+      console.log(
+        `Creating new YouTube player for: ${song.title} (ID: ${song.youtube_id})`,
+      );
+
       playerRef.current = new (window as any).YT.Player("youtube-player", {
         height: "0",
         width: "0",
         videoId: song.youtube_id,
         playerVars: {
-          // Autoplay akan dikontrol lewat pendingAutoPlayRef + event onReady.
-          // Di sini tetap 0 supaya kita punya kontrol penuh dari JS.
           autoplay: 0,
           controls: 0,
           disablekb: 1,
@@ -163,45 +185,51 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           iv_load_policy: 3,
           playsinline: 1,
           quality: "small",
-          enablejsapi: 1, // ⭐ Enable JS API for better control
+          enablejsapi: 1,
         },
         events: {
           onReady: (event: any) => {
-            console.log("YouTube Player Ready");
+            console.log(
+              "YouTube Player Ready for:",
+              event.target?.getVideoData?.()?.title || "unknown",
+            );
             setIsPlayerReady(true);
             event.target.setVolume(volume);
             const duration = event.target.getDuration();
             setDuration(duration);
 
-            // Jika fungsi ini dipanggil dari aksi user (klik lagu / tombol play),
-            // pendingAutoPlayRef.current akan true dan kita paksa playVideo
-            // di SEMUA device (termasuk mobile).
+            // ⭐ Auto-play langsung jika user request
             if (pendingAutoPlayRef.current) {
+              console.log("Auto-playing from onReady...");
               pendingAutoPlayRef.current = false;
-              event.target.playVideo();
-              setIsPlaying(true);
-              startProgressTracking();
+
+              try {
+                event.target.playVideo();
+                setIsPlaying(true);
+                startProgressTracking();
+              } catch (e) {
+                console.error("Error playing video:", e);
+              }
               return;
             }
-            // Kalau bukan dari aksi user, biarkan diam (akan di-trigger oleh auto-next).
           },
           onStateChange: (event: any) => {
-            console.log("YouTube Player State:", event.data);
+            const state = event.data;
+            console.log("YouTube state changed:", state);
 
-            if (event.data === 1) {
+            if (state === 1) {
               // Playing
               setIsPlaying(true);
               startProgressTracking();
-            } else if (event.data === 2) {
+            } else if (state === 2) {
               // Paused
               setIsPlaying(false);
               stopProgressTracking();
-            } else if (event.data === 0) {
+            } else if (state === 0) {
               // Ended
               console.log("Song ended, auto next...");
               setIsPlaying(false);
               setProgress(100);
-              // Auto play next immediately for seamless experience
               handleAutoNextRef.current();
             }
           },
@@ -222,12 +250,87 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
               errorMessages[error.data] || "Unable to play this song";
             setPlaybackError(errorMsg);
 
-            if (error.data === 101 || error.data === 150) {
-              console.warn("Video cannot be embedded. Trying next song...");
-              // Auto skip to next song after 2 seconds
-              setTimeout(() => {
-                handleAutoNextRef.current();
-              }, 2000);
+            // ⭐ Try to fetch YouTube ID dari backend untuk video yang tidak ditemukan
+            if (
+              song &&
+              (error.data === 2 ||
+                error.data === 100 ||
+                error.data === 101 ||
+                error.data === 150)
+            ) {
+              if (!searchedSongsRef.current.has(song.id)) {
+                console.warn(
+                  "Video not found or cannot be embedded. Fetching from backend...",
+                );
+                setPlaybackError("Fetching song source...");
+
+                // Mark sebagai sudah di-search
+                searchedSongsRef.current.add(song.id);
+
+                // Fetch YouTube ID dari backend
+                songResourceApiYoutube({ id: song.id })
+                  .then((result) => {
+                    // ⭐ Check jika ada video_id yang valid
+                    if (result.data?.video_id && result.data.video_id.trim()) {
+                      console.log(
+                        `Found YouTube ID: ${result.data.video_id} for "${song.title}"`,
+                      );
+
+                      // Update current song dengan YouTube ID dari backend
+                      const updatedSong = {
+                        ...song,
+                        youtube_id: result.data.video_id,
+                      };
+                      setCurrentSong(updatedSong);
+
+                      // Set auto-play flag dan buat player baru via ref
+                      pendingAutoPlayRef.current = true;
+                      createYouTubePlayerRef.current(updatedSong);
+                    } else {
+                      // ⭐ No video_id found (status: not_found atau empty)
+                      console.warn(
+                        `No YouTube ID available for "${song.title}" - skipping...`,
+                      );
+                      setPlaybackError(
+                        `Cannot play "${song.title}" - no source - skipping...`,
+                      );
+
+                      // Skip ke lagu berikutnya immediately
+                      setTimeout(() => {
+                        handleAutoNextRef.current();
+                      }, 1500);
+                    }
+                  })
+                  .catch((err: any) => {
+                    // ⭐ Fetch error (network, server error, etc)
+                    console.error("Error fetching YouTube ID:", err);
+                    
+                    // Check if 404 specifically
+                    if (err.response?.status === 404) {
+                      setPlaybackError(
+                        `"${song.title}" not available - skipping...`,
+                      );
+                    } else {
+                      setPlaybackError(
+                        "Error fetching song source - skipping...",
+                      );
+                    }
+
+                    // Skip ke lagu berikutnya
+                    setTimeout(() => {
+                      handleAutoNextRef.current();
+                    }, 1500);
+                  });
+
+              } else {
+                // Already tried, just skip
+                console.log(
+                  `Already tried fetching YouTube ID for "${song.title}", skipping...`,
+                );
+                setTimeout(() => {
+                  handleAutoNextRef.current();
+                }, 2000);
+              }
             }
           },
         },
@@ -237,6 +340,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [volume, startProgressTracking],
   );
+
+  // Update ref dengan latest createYouTubePlayer untuk dihindari circular deps
+  useEffect(() => {
+    createYouTubePlayerRef.current = createYouTubePlayer;
+  }, [createYouTubePlayer]);
 
   // ========== PLAYLIST & QUEUE FUNCTIONS ==========
   const getNextIndex = useCallback((): number => {
@@ -313,42 +421,81 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [getNextIndex, playAtIndex]);
 
-  // Play single song
+  // Play single song + fetch recommendations
   const play = useCallback(
     (song: Song) => {
-      console.log("Play song:", song.title);
+      console.log("🎵 Play song requested:", song.title);
 
-      // Tandai bahwa ini aksi langsung dari user → onReady akan auto-play,
-      // menghilangkan delay ekstra (terutama di mobile).
+      // ⭐ STOP PLAYBACK IMMEDIATELY
+      if (playerRef.current) {
+        try {
+          playerRef.current.stopVideo?.();
+          playerRef.current.pauseVideo?.();
+        } catch (e) {
+          console.warn("Error stopping current playback:", e);
+        }
+      }
+
+      // ⭐ Reset all state
+      setIsPlaying(false);
+      stopProgressTracking();
+      setProgress(0);
+      setCurrentTime(0);
+
+      // Tandai bahwa ini aksi langsung dari user
       pendingAutoPlayRef.current = true;
 
-      setQueue((prevQueue) => {
-        // Cek apakah song sudah ada di queue
-        const existingIndex = prevQueue.findIndex((s) => s.id === song.id);
+      // ⭐ RESET QUEUE dan Play single song
+      setQueue([song]);
+      setCurrentIndex(0);
+      setCurrentSong(song);
 
-        if (existingIndex !== -1) {
-          // Update current index dan song, lalu buat / pakai player
-          setCurrentIndex(existingIndex);
-          const existingSong = prevQueue[existingIndex];
-          setCurrentSong(existingSong);
-          if (existingSong.youtube_id) {
-            createYouTubePlayer(existingSong);
-          }
-          return prevQueue;
-        }
+      console.log("Creating player for song with ID:", song.youtube_id);
 
-        // Tambah ke queue dan langsung play pada index baru
-        const newQueue = [...prevQueue, song];
-        const newIndex = newQueue.length - 1;
-        setCurrentIndex(newIndex);
-        setCurrentSong(song);
-        if (song.youtube_id) {
+      if (song.youtube_id) {
+        // Small delay untuk ensure proper cleanup sebelum create player baru
+        setTimeout(() => {
           createYouTubePlayer(song);
-        }
-        return newQueue;
-      });
+        }, 50);
+      }
+
+      // ⭐ FETCH RECOMMENDATIONS ASYNCHRONOUSLY
+      if (song.id !== currentRecommendationsRef.current) {
+        currentRecommendationsRef.current = song.id;
+
+        console.log(
+          `Fetching content-based recommendations for "${song.title}"...`,
+        );
+
+        recommendationContentApi({ song_id: song.id })
+          .then((response) => {
+            const recommendations = response.data?.recommendations ?? [];
+
+            if (recommendations.length > 0) {
+              console.log(
+                `Loaded ${recommendations.length} recommendations for "${song.title}"`,
+              );
+
+              // Extract songs dari recommendations
+              const recommendedSongs = recommendations.map((rec) => rec.song);
+
+              // Add to queue (append ke queue yang sekarang sudah punya 1 song)
+              setQueue((prevQueue) => {
+                // Hanya tambah jika masih song yang sama yang sedang di-play
+                if (prevQueue[0]?.id === song.id) {
+                  return [prevQueue[0], ...recommendedSongs];
+                }
+                return prevQueue;
+              });
+            }
+          })
+          .catch((err) => {
+            console.warn("Failed to fetch recommendations:", err);
+            // Continue playing without recommendations
+          });
+      }
     },
-    [createYouTubePlayer],
+    [createYouTubePlayer, stopProgressTracking],
   );
 
   // Pause

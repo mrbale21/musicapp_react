@@ -4,7 +4,7 @@ import {
   Heart,
   Pause,
   Loader2,
-  Clock,
+  MoreHorizontal,
   Plus,
   SkipForward,
 } from "lucide-react";
@@ -17,8 +17,6 @@ interface AllSongsCardProps {
   isPlaying?: boolean;
   likeLoading?: boolean;
   playLoading?: boolean;
-  index?: number;
-  showIndex?: boolean;
   compact?: boolean;
   showQueueActions?: boolean;
   onAddToQueue?: (song: Song) => void;
@@ -39,7 +37,7 @@ const AllSongsCard: React.FC<AllSongsCardProps> = ({
 }) => {
   const [localLikeState, setLocalLikeState] = useState(song.is_liked);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showPlayHover, setShowPlayHover] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   useEffect(() => {
     setLocalLikeState(song.is_liked);
@@ -71,6 +69,7 @@ const AllSongsCard: React.FC<AllSongsCardProps> = ({
     e.stopPropagation();
     if (onAddToQueue) {
       onAddToQueue(song);
+      setShowActions(false);
     }
   };
 
@@ -78,123 +77,77 @@ const AllSongsCard: React.FC<AllSongsCardProps> = ({
     e.stopPropagation();
     if (onPlayNext) {
       onPlayNext(song);
+      setShowActions(false);
     }
   };
 
-  const formatDuration = (tempo?: number) => {
-    if (!tempo) return "0:00";
-    const durationMs = (tempo / 60) * 1000; // Convert BPM to approximate duration
-    const minutes = Math.floor(durationMs / 60000);
-    const seconds = Math.floor((durationMs % 60000) / 1000);
+  const formatDuration = (ms: number) => {
+    if (!ms) return "0:00";
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   return (
     <div
       onClick={handlePlay}
-      onMouseEnter={() => setShowPlayHover(true)}
-      onMouseLeave={() => setShowPlayHover(false)}
       className={`
-        group flex items-center gap-4 p-4 rounded-xl cursor-pointer
-        transition-all duration-300 relative
+        relative flex items-center gap-3 px-4 py-3
+        transition-all duration-200 active:bg-gray-800/50
         ${
           isPlaying
-            ? "bg-linear-to-r from-purple-500/10 to-pink-500/10 border-l-4 border-purple-500 shadow-lg shadow-purple-900/20"
-            : "hover:bg-gray-800/40 bg-gray-900/30 backdrop-blur-sm"
+            ? "bg-linear-to-r from-purple-900/20 to-pink-900/20 border-l-4 border-purple-500"
+            : "hover:bg-gray-800/30"
         }
-        ${compact ? "py-3" : ""}
-        ${isAnimating && localLikeState ? "ring-1 ring-pink-500/30" : ""}
-        border border-gray-800/30 hover:border-gray-700/50
       `}
     >
-      {/* Background Glow Effect */}
-      <div className="absolute inset-0 rounded-xl bg-linear-to-r from-purple-900/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-      {/* Album Art */}
+      {/* Album Art with Play Button Overlay */}
       <div className="relative shrink-0">
         <div
           className={`
-            w-14 h-14 rounded-lg overflow-hidden transition-all duration-500
-            ${isPlaying ? "ring-2 ring-purple-500 scale-105 shadow-lg shadow-purple-900/30" : ""}
-            ${isAnimating && localLikeState ? "ring-2 ring-pink-500/30" : ""}
-            group-hover:shadow-xl group-hover:shadow-purple-900/20
-          `}
+          w-14 h-14 rounded-lg overflow-hidden
+          ${isPlaying ? "ring-2 ring-purple-500 shadow-lg shadow-purple-500/20" : ""}
+        `}
         >
-          {/* Image with linear overlay */}
-          <div className="relative w-full h-full">
-            <img
-              src={song.image_url || "/placeholder-album.jpg"}
-              alt={song.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent"></div>
-          </div>
+          <img
+            src={song.image_url || "/placeholder-album.jpg"}
+            alt={song.title}
+            className="w-full h-full object-cover"
+          />
 
-          {/* Play Button Overlay */}
-          <button
-            onClick={handlePlay}
-            disabled={playLoading}
-            className={`
-              absolute inset-0 flex items-center justify-center
-              backdrop-blur-sm transition-all duration-300
-              ${isPlaying || playLoading ? "bg-black/70 opacity-100" : "bg-black/50 opacity-0 group-hover:opacity-100"}
-              ${playLoading ? "cursor-not-allowed" : "cursor-pointer"}
-              rounded-lg
-            `}
-          >
-            {playLoading ? (
-              <div className="relative w-8 h-8">
-                <Loader2 className="w-8 h-8 animate-spin text-white" />
-              </div>
-            ) : isPlaying ? (
-              <div className="relative overflow-hidden group/play-btn w-10 h-10 rounded-full">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-600 to-pink-500"></div>
-                <Pause className="relative z-10 w-5 h-5 text-white mx-auto" />
-              </div>
-            ) : (
-              <div className="relative overflow-hidden group/play-btn w-10 h-10 rounded-full">
-                <div className="absolute inset-0 bg-linear-to-r from-purple-600 to-pink-500"></div>
-                <div className="absolute inset-0 bg-linear-to-r from-purple-500 to-pink-400 opacity-0 group-hover/play-btn:opacity-100 transition-opacity"></div>
-                <Play className="relative z-10 w-5 h-5 text-white ml-0.5 mx-auto" />
-              </div>
-            )}
-          </button>
-
-          {/* Playing Indicator */}
-          {isPlaying && !playLoading && (
-            <div className="absolute -bottom-1 -right-1">
-              <div className="flex gap-0.5 bg-black/80 backdrop-blur-sm rounded-full px-2 py-1 border border-purple-500/30">
-                <div className="w-1.5 h-3 bg-purple-400 rounded-full animate-pulse-fast"></div>
-                <div
-                  className="w-1.5 h-4 bg-purple-400 rounded-full animate-pulse-fast"
-                  style={{ animationDelay: "150ms" }}
-                ></div>
-                <div
-                  className="w-1.5 h-3 bg-purple-400 rounded-full animate-pulse-fast"
-                  style={{ animationDelay: "300ms" }}
-                ></div>
-              </div>
-            </div>
-          )}
+          {/* Subtle linear overlay */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </div>
 
-        {/* Queue Actions (hover only) */}
-        {showQueueActions && (showPlayHover || isPlaying) && (
-          <div className="absolute -right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button
-              onClick={handleAddToQueue}
-              className="w-7 h-7 bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm rounded-full flex items-center justify-center border border-gray-700/50 transition-all duration-200 hover:scale-110 active:scale-95"
-              title="Add to queue"
-            >
-              <Plus className="w-3 h-3 text-gray-300" />
-            </button>
-            <button
-              onClick={handlePlayNext}
-              className="w-7 h-7 bg-gray-800/90 hover:bg-gray-700/90 backdrop-blur-sm rounded-full flex items-center justify-center border border-gray-700/50 transition-all duration-200 hover:scale-110 active:scale-95"
-              title="Play next"
-            >
-              <SkipForward className="w-3 h-3 text-gray-300" />
-            </button>
+        {/* Minimal Play Button Overlay */}
+        <button
+          onClick={handlePlay}
+          disabled={playLoading}
+          className={`
+            absolute inset-0 flex items-center justify-center
+            transition-all duration-200 rounded-lg
+            ${playLoading ? "bg-black/40" : "hover:bg-black/20"}
+            ${isPlaying ? "bg-black/30" : ""}
+          `}
+        >
+          {playLoading ? (
+            <Loader2 className="w-6 h-6 text-white animate-spin drop-shadow-lg" />
+          ) : isPlaying ? (
+            <div className="relative">
+              {/* Minimal playing indicator */}
+              <div className="absolute -inset-2 bg-purple-500/20 rounded-full blur-sm"></div>
+              <Pause className="relative w-6 h-6 text-white drop-shadow-lg" />
+            </div>
+          ) : (
+            <Play className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+          )}
+        </button>
+
+        {/* Tiny playing indicator dot (optional) */}
+        {isPlaying && !playLoading && (
+          <div className="absolute -top-1 -right-1 w-2.5 h-2.5">
+            <div className="absolute inset-0 bg-purple-500 rounded-full animate-ping"></div>
+            <div className="absolute inset-0 bg-purple-500 rounded-full"></div>
           </div>
         )}
       </div>
@@ -203,165 +156,153 @@ const AllSongsCard: React.FC<AllSongsCardProps> = ({
       <div className="flex-1 min-w-0">
         <h3
           className={`
-            truncate font-semibold transition-colors duration-200
-            ${isPlaying ? "text-purple-300" : "text-white group-hover:text-purple-200"}
-          `}
+          font-medium truncate text-base
+          ${isPlaying ? "text-purple-400" : "text-white"}
+        `}
         >
           {song.title}
         </h3>
-        <p className="truncate text-sm text-gray-400 group-hover:text-gray-300">
+
+        <p className="text-sm text-gray-400 truncate">
           {song.artist}
+          {song.album && !compact && (
+            <span className="text-gray-500"> • {song.album}</span>
+          )}
         </p>
 
-        {/* Album and Genre Info */}
-        {!compact && (song.album || song.genre) && (
+        {/* Mobile metadata */}
+        {!compact && (
           <div className="flex items-center gap-2 mt-1">
-            {song.album && (
-              <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-0.5 rounded-full">
-                {song.album}
-              </span>
-            )}
             {song.genre && (
-              <span className="text-xs text-purple-400 bg-purple-900/20 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-purple-400 bg-purple-900/30 px-2 py-0.5 rounded-full">
                 {song.genre}
               </span>
             )}
+            <span className="text-xs text-gray-500">
+              {formatDuration(song.duration_ms)}
+            </span>
           </div>
         )}
       </div>
 
-      {/* Duration */}
-      {!compact && (
-        <div className="flex items-center gap-2 text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
-          <Clock className="w-3.5 h-3.5" />
-          <span>
-            {formatDuration(
-              song.duration_ms ? song.duration_ms / 1000 : song.tempo,
-            )}
-          </span>
-        </div>
+      {/* Duration for compact mode */}
+      {compact && (
+        <span className="text-xs text-gray-500 shrink-0">
+          {formatDuration(song.duration_ms)}
+        </span>
       )}
 
-      {/* Like Button */}
-      <div className="relative shrink-0">
+      {/* Action Buttons */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Like Button */}
         <button
           onClick={handleLike}
           disabled={likeLoading || isAnimating}
           className={`
-            relative overflow-hidden group/like w-9 h-9
-            rounded-full flex items-center justify-center
-            transition-all duration-300 ease-out
-            ${likeLoading || isAnimating ? "opacity-70 cursor-not-allowed" : ""}
-            active:scale-95
+            relative p-2.5 rounded-full transition-all duration-200
+            active:scale-90 active:bg-gray-800/50
+            ${localLikeState ? "text-pink-400" : "text-gray-400 hover:text-pink-400"}
           `}
         >
-          {/* Background */}
-          <div
-            className={`absolute inset-0 rounded-full transition-all duration-300 ${
-              localLikeState
-                ? "bg-linear-to-r from-pink-600/20 to-pink-500/20"
-                : "bg-gray-800/50 backdrop-blur-sm"
-            }`}
-          ></div>
-
-          {/* Hover linear */}
-          <div className="absolute inset-0 bg-linear-to-r from-pink-600/30 to-pink-500/30 opacity-0 group-hover/like:opacity-100 transition-opacity duration-300 rounded-full"></div>
-
-          {/* Icon */}
-          <div className="relative z-10">
-            {likeLoading ? (
-              <Loader2 className="w-4 h-4 text-pink-400 animate-spin" />
-            ) : (
-              <Heart
-                className={`
-                  w-4 h-4 transition-all duration-300
-                  ${localLikeState ? "fill-pink-400 text-pink-400" : "text-gray-400 group-hover/like:text-pink-300"}
-                  ${isAnimating && localLikeState ? "scale-125" : ""}
-                `}
-              />
-            )}
-          </div>
-
-          {/* Pulsing effect when liked and animating */}
-          {isAnimating && localLikeState && (
-            <div className="absolute -inset-3">
-              <div className="absolute inset-0 rounded-full bg-pink-500/20 animate-ping-fast"></div>
-            </div>
+          {likeLoading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Heart
+              className={`
+                w-5 h-5 transition-all duration-200
+                ${localLikeState ? "fill-pink-400" : ""}
+                ${isAnimating && localLikeState ? "scale-125" : ""}
+              `}
+            />
           )}
         </button>
 
-        {/* Floating particles effect */}
-        {isAnimating && localLikeState && (
-          <>
-            <div
-              className="absolute -top-1 -right-1 w-2 h-2 bg-pink-400 rounded-full animate-float"
-              style={{ animationDelay: "0s" }}
-            />
-            <div
-              className="absolute -top-2 right-2 w-1.5 h-1.5 bg-pink-300 rounded-full animate-float"
-              style={{ animationDelay: "0.1s" }}
-            />
-            <div
-              className="absolute top-0 -right-2 w-1 h-1 bg-pink-200 rounded-full animate-float"
-              style={{ animationDelay: "0.2s" }}
-            />
-          </>
-        )}
+        {/* More Actions */}
+        {showQueueActions && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowActions(!showActions);
+              }}
+              className="p-2.5 rounded-full text-gray-400 hover:text-purple-400 active:bg-gray-800/50 transition-all"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
 
-        {/* Static glow for liked songs */}
-        {song.is_liked && !likeLoading && !isAnimating && (
-          <div className="absolute -inset-2 pointer-events-none">
-            <div className="absolute inset-0 rounded-full bg-linear-to-br from-pink-500/10 via-transparent to-transparent animate-pulse-slow"></div>
+            {/* Actions Popup */}
+            {showActions && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowActions(false);
+                  }}
+                />
+
+                <div className="absolute right-0 bottom-full mb-2 z-50 min-w-44">
+                  <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-xl overflow-hidden backdrop-blur-sm">
+                    <button
+                      onClick={handleAddToQueue}
+                      className="w-full px-4 py-3.5 flex items-center gap-3 text-left hover:bg-gray-800 transition-colors active:bg-gray-700"
+                    >
+                      <Plus className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm text-white">Add to Queue</span>
+                    </button>
+                    <button
+                      onClick={handlePlayNext}
+                      className="w-full px-4 py-3.5 flex items-center gap-3 text-left hover:bg-gray-800 transition-colors border-t border-gray-800 active:bg-gray-700"
+                    >
+                      <SkipForward className="w-4 h-4 text-pink-400" />
+                      <span className="text-sm text-white">Play Next</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
+
+      {/* Like Animation */}
+      {isAnimating && localLikeState && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-pink-400 rounded-full"
+                style={{
+                  animation: `float-particle 0.6s ease-out forwards`,
+                  animationDelay: `${i * 0.1}s`,
+                  transform: `rotate(${i * 120}deg) translateY(-12px)`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// CSS animations
-const styles = `
-  @keyframes pulse-fast {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  
-  @keyframes ping-fast {
-    75%, 100% { transform: scale(2); opacity: 0; }
-  }
-  
-  @keyframes float {
-    0%, 100% { transform: translateY(0) scale(1); opacity: 1; }
-    50% { transform: translateY(-8px) scale(1.1); opacity: 0.8; }
-  }
-  
-  @keyframes pulse-slow {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 0.3; }
-  }
-  
-  .animate-pulse-fast {
-    animation: pulse-fast 0.8s ease-in-out infinite;
-  }
-  
-  .animate-ping-fast {
-    animation: ping-fast 0.6s cubic-bezier(0, 0, 0.2, 1) infinite;
-  }
-  
-  .animate-float {
-    animation: float 0.8s ease-in-out;
-  }
-  
-  .animate-pulse-slow {
-    animation: pulse-slow 3s ease-in-out infinite;
-  }
-`;
-
-// Add styles to document head
+// Styles
 if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes float-particle {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--x, 20px), var(--y, -20px)) scale(0);
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 export default AllSongsCard;

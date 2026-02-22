@@ -83,7 +83,7 @@ const SongDetailPage = () => {
     <div className="pb-32">
       <div className="relative">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/home")}
           className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center"
         >
           <X className="w-6 h-6 text-white" />

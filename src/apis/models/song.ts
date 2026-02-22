@@ -35,5 +35,12 @@ export interface Song {
   youtube_id?: string;
 }
 
+// models/ApiResponse.ts - Interface untuk response API
+export interface ApiResponse<T> {
+  data: T;
+  message: string;
+  status: string;
+}
+
 // models/SongWithFeatures.ts (optional - combined)
 export interface SongWithFeatures extends Song, AudioFeatures {}

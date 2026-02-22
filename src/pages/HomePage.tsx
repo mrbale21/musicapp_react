@@ -580,7 +580,7 @@ const HomePage = () => {
             <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800 overflow-hidden">
               {" "}
               {/* Ganti warna */}
-              {allSongs.map((song, index) => (
+              {allSongs.map((song) => (
                 <div
                   key={song.id}
                   onClick={() => handleCardClick(song)}
@@ -589,8 +589,6 @@ const HomePage = () => {
                 >
                   <AllSongsCard
                     song={song}
-                    index={index + 1}
-                    showIndex
                     isPlaying={isCurrentPlaying(song.id)}
                     onPlay={(song) => handlePlayOnly(song)}
                     onLike={handleLikeSong}

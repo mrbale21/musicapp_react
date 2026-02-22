@@ -1,5 +1,5 @@
-// pages/ProfilePage.tsx
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   User,
   Mail,
@@ -12,17 +12,31 @@ import {
   ChevronRight,
   Star,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import { useUserData } from "../hooks/zustand";
-import { useEffect } from "react";
+import useApi from "../apis/api";
+import { checkTokenApi } from "../apis/endpoints/auth";
+import { toast } from "react-toastify";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUserData();
+  const { user, setUser } = useUserData();
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    user;
-  }, []);
+  const refreshUserData = useApi({
+    api: checkTokenApi,
+    onSuccess: (data) => {
+      setUser(data?.data ?? null);
+      setRefreshing(false);
+      toast.success("Data profil diperbarui");
+    },
+    onFail: (error) => {
+      console.error("Error refreshing user data:", error);
+      toast.error("Gagal memperbarui data profil");
+      setRefreshing(false);
+    },
+  });
 
   const handleBack = () => {
     navigate(-1);
@@ -52,12 +66,26 @@ const ProfilePage: React.FC = () => {
     navigate("/popular");
   };
 
+  const handleRefresh = () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    refreshUserData.process({ token: "" }); // Token akan diambil dari cookie otomatis
+  };
+
   const handleLogout = () => {
+    const confirmLogout = window.confirm(
+      "Apakah Anda yakin ingin keluar dari akun?",
+    );
+    if (!confirmLogout) return;
+
     // Hapus semua data auth
     document.cookie =
       "app_user_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     localStorage.clear();
     sessionStorage.clear();
+
+    // Reset user state
+    setUser(null);
 
     // Redirect ke login
     navigate("/auth", { replace: true });
@@ -121,8 +149,19 @@ const ProfilePage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
-              <User className="w-6 h-6 text-purple-400" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="w-10 h-10 bg-black/60 backdrop-blur-sm border border-purple-500/30 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 text-white ${refreshing ? "animate-spin" : ""}`}
+                />
+              </button>
+              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
+                <User className="w-6 h-6 text-purple-400" />
+              </div>
             </div>
           </div>
         </div>
@@ -328,8 +367,11 @@ const ProfilePage: React.FC = () => {
                     <Music className="w-4 h-4 text-purple-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-white text-sm">Lagu Diputar</p>
+                    <p className="text-white text-sm font-medium">
+                      {play.song?.title || "Lagu Tidak Diketahui"}
+                    </p>
                     <p className="text-xs text-gray-400">
+                      {play.song?.artist || "Artis Tidak Diketahui"} •{" "}
                       {play.play_count} kali diputar • Terakhir:{" "}
                       {formatDate(play.last_played)}
                     </p>

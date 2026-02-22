@@ -30,12 +30,13 @@ const RecentSongPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalSongs, setTotalSongs] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // API
   const playsSongsApi = useApi({
     api: songUsePlaysApi,
     onSuccess: (data) => {
-      if (data?.data) {
+      if (data?.data && Array.isArray(data.data)) {
         const mappedSongs: Song[] = data.data.map((s: any) => ({
           ...s,
           is_liked: s.is_liked === "1" || s.is_liked === true,
@@ -43,6 +44,10 @@ const RecentSongPage = () => {
 
         setSongs(mappedSongs);
         setTotalSongs(mappedSongs.length);
+      } else {
+        console.warn("Invalid data structure for plays:", data);
+        setSongs([]);
+        setTotalSongs(0);
       }
       setLoading(false);
     },
@@ -70,6 +75,14 @@ const RecentSongPage = () => {
   useEffect(() => {
     playsSongsApi.process({});
   }, []);
+
+  // Refresh function
+  const handleRefresh = useCallback(() => {
+    if (refreshing) return;
+    setRefreshing(true);
+    playsSongsApi.process({});
+    setTimeout(() => setRefreshing(false), 1000); // Reset refreshing state
+  }, [refreshing, playsSongsApi]);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalSongs / ITEMS_PER_PAGE);
@@ -155,11 +168,6 @@ const RecentSongPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    setLoading(true);
-    playsSongsApi.process({});
-  }, [playsSongsApi]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-900 via-blue-900/20 to-black flex items-center justify-center relative overflow-hidden">
@@ -229,8 +237,19 @@ const RecentSongPage = () => {
               >
                 <RefreshCw className="w-4 h-4 text-blue-400" />
               </button>
-              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-teal-500/20 flex items-center justify-center border border-blue-500/30">
-                <History className="w-6 h-6 text-blue-400" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="w-10 h-10 bg-black/60 backdrop-blur-sm border border-blue-500/30 rounded-full flex items-center justify-center hover:bg-blue-900/30 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw
+                    className={`w-5 h-5 text-white ${refreshing ? "animate-spin" : ""}`}
+                  />
+                </button>
+                <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-teal-500/20 flex items-center justify-center border border-blue-500/30">
+                  <History className="w-6 h-6 text-blue-400" />
+                </div>
               </div>
             </div>
           </div>

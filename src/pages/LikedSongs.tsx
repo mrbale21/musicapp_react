@@ -9,6 +9,7 @@ import {
   Music,
   Play,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import type { Song } from "../apis/models/models";
@@ -28,19 +29,26 @@ const LikedSongsPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalSongs, setTotalSongs] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // API
   const likedSongsApi = useApi({
     api: songUseLikesApi,
     onSuccess: (res) => {
-      if (res?.data) {
-        const mappedSongs: Song[] = res.data.map((item: any) => ({
-          ...item.song,
-          is_liked: true,
-        }));
+      if (res?.data && Array.isArray(res.data)) {
+        const mappedSongs: Song[] = res.data
+          .filter((item: any) => item.song) // Pastikan song ada
+          .map((item: any) => ({
+            ...item.song,
+            is_liked: true,
+          }));
 
         setSongs(mappedSongs);
         setTotalSongs(mappedSongs.length);
+      } else {
+        console.warn("Invalid data structure for likes:", res);
+        setSongs([]);
+        setTotalSongs(0);
       }
       setLoading(false);
     },
@@ -68,6 +76,14 @@ const LikedSongsPage = () => {
   useEffect(() => {
     likedSongsApi.process({});
   }, []);
+
+  // Refresh function
+  const handleRefresh = useCallback(() => {
+    if (refreshing) return;
+    setRefreshing(true);
+    likedSongsApi.process({});
+    setTimeout(() => setRefreshing(false), 1000); // Reset refreshing state
+  }, [refreshing, likedSongsApi]);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalSongs / ITEMS_PER_PAGE);
@@ -215,8 +231,19 @@ const LikedSongsPage = () => {
                 </p>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center border border-pink-500/30">
-              <Heart className="w-6 h-6 text-pink-400" fill="currentColor" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="w-10 h-10 bg-black/60 backdrop-blur-sm border border-pink-500/30 rounded-full flex items-center justify-center hover:bg-pink-900/30 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 text-white ${refreshing ? "animate-spin" : ""}`}
+                />
+              </button>
+              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center border border-pink-500/30">
+                <Heart className="w-6 h-6 text-pink-400" fill="currentColor" />
+              </div>
             </div>
           </div>
 

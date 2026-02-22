@@ -10,6 +10,7 @@ import {
   Play,
   Heart,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import type { Song } from "../apis/models/models";
@@ -29,6 +30,7 @@ const PopularSongsPage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalSongs, setTotalSongs] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // API
   const popularSongsApi = useApi({
@@ -64,6 +66,14 @@ const PopularSongsPage = () => {
   useEffect(() => {
     popularSongsApi.process({});
   }, []);
+
+  // Refresh function
+  const handleRefresh = useCallback(() => {
+    if (refreshing) return;
+    setRefreshing(true);
+    popularSongsApi.process({});
+    setTimeout(() => setRefreshing(false), 1000); // Reset refreshing state
+  }, [refreshing, popularSongsApi]);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalSongs / ITEMS_PER_PAGE);
@@ -211,8 +221,17 @@ const PopularSongsPage = () => {
                 </p>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="w-10 h-10 bg-black/60 backdrop-blur-sm border border-purple-500/30 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-5 h-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+              <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
+                <TrendingUp className="w-6 h-6 text-purple-400" />
+              </div>
             </div>
           </div>
 

@@ -201,10 +201,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
               console.log("Song ended, auto next...");
               setIsPlaying(false);
               setProgress(100);
-              // Auto play next setelah delay
-              setTimeout(() => {
-                handleAutoNextRef.current();
-              }, 1000);
+              // Auto play next immediately for seamless experience
+              handleAutoNextRef.current();
             }
           },
           onError: (error: any) => {
@@ -291,6 +289,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log(`Playing song ${index + 1}/${queue.length}:`, song.title);
 
       if (song.youtube_id) {
+        // Set auto-play flag for seamless transition
+        pendingAutoPlayRef.current = true;
         createYouTubePlayer(song);
       } else {
         console.warn("No YouTube ID for song");

@@ -3,18 +3,18 @@ import type { UserLike, UserPlay } from "./user_activity";
 export interface ResAuth {
   data: {
     token: string;
-    user: User;
+    user: UserModel;
     message: string;
     status: string;
   };
 }
 export interface ResAuthMe {
-  data: User; // Untuk /auth/me, data langsung berisi User
+  data: UserModel; // Untuk /auth/me, data langsung berisi User
   message: string;
   status: string;
 }
 // models/User.ts
-export interface User {
+export interface UserModel {
   id: number;
   username: string;
   email: string;
@@ -45,5 +45,5 @@ export interface UserLogin {
 // models/AuthResponse.ts
 export interface AuthResponse {
   token: string;
-  user: User;
+  user: UserModel;
 }

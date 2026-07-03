@@ -34,7 +34,6 @@ const HomePage = () => {
   // APIs
   const songApi = useApi({ api: songsUseApi });
   const popularSongsApi = useApi({ api: recommendationPopularApi });
-  const songsSourceApi = useApi({ api: songResourceApiYoutube });
   const contentRecommendApi = useApi({ api: recommendationContentApi });
 
   // Custom Hooks
@@ -201,21 +200,12 @@ const HomePage = () => {
     }
 
     try {
-      songsSourceApi.process({ id: song.id });
+      const response = await songResourceApiYoutube({ id: song.id });
 
-      await new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-          if (!songsSourceApi.isLoading) {
-            clearInterval(checkInterval);
-            resolve(null);
-          }
-        }, 100);
-      });
-
-      if (songsSourceApi.data?.data?.video_id) {
+      if (response.data?.video_id) {
         const updatedSong = {
           ...song,
-          youtube_id: songsSourceApi.data.data.video_id,
+          youtube_id: response.data.video_id,
         };
 
         setSongs((prev) =>
@@ -224,7 +214,7 @@ const HomePage = () => {
 
         if (import.meta.env.DEV) {
           console.log(
-            `Found YouTube ID: ${songsSourceApi.data.data.video_id} for ${song.title}`,
+            `Found YouTube ID: ${response.data.video_id} for ${song.title}`,
           );
         }
         return updatedSong;

@@ -5,7 +5,7 @@ import MusicCard from "../components/PopularCard";
 import type { Song } from "../apis/models/models";
 import { useNavigate, useParams } from "react-router-dom";
 import useApi from "../apis/api";
-import { songUseApiById } from "../apis/endpoints/song";
+import { songUseApiById, songResourceApiYoutube } from "../apis/endpoints/song";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import { songLikeApi, songUnLikeApi } from "../apis/endpoints/songlike";
 import { useMusicAlert } from "../utils/alerthelpers";
@@ -75,8 +75,25 @@ const SongDetailPage = () => {
   };
 
   // ===== PLAY + NAVIGATE =====
-  const handlePlay = () => {
-    playSong(song);
+  const handlePlay = async () => {
+    if (song.youtube_id) {
+      playSong(song);
+    } else {
+      try {
+        const result = await songResourceApiYoutube({ id: song.id });
+        if (result.data?.video_id) {
+          const updatedSong = { ...song, youtube_id: result.data.video_id };
+          setSong(updatedSong);
+          playSong(updatedSong);
+        } else {
+          console.warn("No YouTube ID found for:", song.title);
+          musicAlert.errorPlay();
+        }
+      } catch {
+        console.error("Error fetching YouTube ID for:", song.title);
+        musicAlert.errorPlay();
+      }
+    }
   };
 
   return (
@@ -133,8 +150,17 @@ const SongDetailPage = () => {
                 key={rec.song.id}
                 song={rec.song}
                 onPlay={() => {
-                  playSong(rec.song);
-                  navigate(`/song/${rec.song.id}`);
+                  const s = rec.song;
+                  if (s.youtube_id) {
+                    playSong(s);
+                  } else {
+                    songResourceApiYoutube({ id: s.id }).then((res) => {
+                      if (res.data?.video_id) {
+                        playSong({ ...s, youtube_id: res.data.video_id });
+                      }
+                    });
+                  }
+                  navigate(`/song/${s.id}`);
                 }}
                 onLike={() => {}}
               />

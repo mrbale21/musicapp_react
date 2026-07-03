@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AxiosError } from "axios";
 import { useCookies } from "react-cookie";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
@@ -62,11 +63,21 @@ const LoginForm: React.FC = () => {
       }
     },
     onFail: (error) => {
-      const status = error;
-      if (status === 401) toast.error("Email atau password salah");
-      else if (status === 500) toast.error("Server bermasalah");
-      else toast.error("Terjadi kesalahan, coba lagi");
-      throw error;
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const status = axiosError.response?.status;
+      const serverMsg = axiosError.response?.data?.message;
+
+      if (serverMsg) {
+        toast.error(serverMsg);
+      } else if (status === 401) {
+        toast.error("Email atau password salah");
+      } else if (status === 422) {
+        toast.error("Data yang dimasukkan tidak valid");
+      } else if (status === 500) {
+        toast.error("Server bermasalah");
+      } else {
+        toast.error("Terjadi kesalahan, coba lagi (" + status + ")");
+      }
     },
   });
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AxiosError } from "axios";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { toast } from "react-toastify";
 import useApi from "../apis/api";
@@ -39,13 +40,21 @@ const RegisterForm: React.FC = () => {
       }, 1500);
     },
     onFail: (error) => {
-      const status = error;
-      if (status === 400) toast.error("Data tidak valid");
-      else if (status === 409)
+      const axiosError = error as AxiosError<{ message?: string }>;
+      const status = axiosError.response?.status;
+      const serverMsg = axiosError.response?.data?.message;
+
+      if (serverMsg) {
+        toast.error(serverMsg);
+      } else if (status === 409) {
         toast.error("Email atau username sudah terdaftar");
-      else if (status === 500) toast.error("Server bermasalah");
-      else toast.error("Terjadi kesalahan, coba lagi");
-      throw error;
+      } else if (status === 422) {
+        toast.error("Data yang dimasukkan tidak valid");
+      } else if (status === 500) {
+        toast.error("Server bermasalah");
+      } else {
+        toast.error("Terjadi kesalahan, coba lagi (" + status + ")");
+      }
     },
   });
 

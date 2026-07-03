@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import type { User } from "../apis/models/user";
+import type { UserModel } from "../apis/models/user";
 
 interface UserDataState {
-  user: User | null;
+  user: UserModel | null;
 
-  setUser: (user: User | null) => void;
+  setUser: (user: UserModel | null) => void;
 }
 
 export const useUserData = create<UserDataState>((set) => ({

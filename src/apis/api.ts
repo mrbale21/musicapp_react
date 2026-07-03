@@ -1,6 +1,4 @@
-import { AxiosError } from "axios";
 import { useState } from "react";
-import { toast } from "react-toastify";
 
 type FetcherParams<T, P> = {
   api: ({ ...props }: T) => Promise<P | null>;
@@ -107,14 +105,6 @@ const useApi = <T, P>({
               setIsLoading(false);
               onFail(e, ...props);
               reject(e);
-              const error = e as AxiosError;
-              const data = error.response?.data as {
-                message?: string;
-              };
-              const msg = data?.message;
-              if (error.response?.status !== 401 && msg) {
-                toast.error(`${msg} - (${error.response?.status ?? 500})`);
-              }
               return;
             }
 

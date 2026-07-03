@@ -1,5 +1,5 @@
 // components/BottomPlayer.tsx - Versi minimalis untuk mobile
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Play,
   Pause,
@@ -16,6 +16,8 @@ import {
 import { usePlayer } from "../context/PlayerContext";
 import LikeButton from "./LikedButton";
 import { formatTime } from "../utils/formatTime";
+import { useSongInteractions } from "../hooks/useSongsInteractions";
+import { useUserData } from "../hooks/zustand";
 
 const BottomPlayer: React.FC = () => {
   const {
@@ -26,6 +28,7 @@ const BottomPlayer: React.FC = () => {
     setProgress,
     nextSong,
     prevSong,
+    volume: contextVolume,
     setVolume,
     queue,
     currentIndex,
@@ -34,12 +37,37 @@ const BottomPlayer: React.FC = () => {
     setRepeatMode,
     isShuffled,
     playbackError,
+    duration,
+    updateCurrentSong,
   } = usePlayer();
 
-  const [volume, setLocalVolume] = useState(80);
+  const [volume, setLocalVolume] = useState(contextVolume);
   const [isMuted, setIsMuted] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const prevVolumeRef = useRef(contextVolume);
+  const { user, setUser } = useUserData();
+
+  const { handleLike } = useSongInteractions({
+    onUpdateSong: (songId, updates) => {
+      if (currentSong?.id === songId) {
+        updateCurrentSong(updates);
+      }
+      // Sync with zustand (profile likes count)
+      if (user && updates.is_liked !== undefined) {
+        const userLikes = user.likes || [];
+        if (updates.is_liked) {
+          setUser({ ...user, likes: [...userLikes, { id: songId, song_id: songId } as any] });
+        } else {
+          setUser({ ...user, likes: userLikes.filter((l: any) => l.song_id !== songId) });
+        }
+      }
+    },
+  });
+
+  useEffect(() => {
+    setLocalVolume(contextVolume);
+  }, [contextVolume]);
 
   if (!currentSong) return null;
 
@@ -52,10 +80,12 @@ const BottomPlayer: React.FC = () => {
 
   const toggleMute = () => {
     if (isMuted) {
-      setLocalVolume(80);
-      setVolume(80);
+      const prevVol = prevVolumeRef.current;
+      setLocalVolume(prevVol);
+      setVolume(prevVol);
       setIsMuted(false);
     } else {
+      prevVolumeRef.current = volume;
       setLocalVolume(0);
       setVolume(0);
       setIsMuted(true);
@@ -112,7 +142,7 @@ const BottomPlayer: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <LikeButton
                     isLiked={currentSong.is_liked ? true : false}
-                    onClick={() => {}}
+                    onClick={() => handleLike(currentSong)}
                   />
                   <button
                     onClick={() => setShowQueue(!showQueue)}
@@ -137,16 +167,16 @@ const BottomPlayer: React.FC = () => {
                   onChange={(e) => setProgress(Number(e.target.value))}
                   className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                   style={{
-                    background: `linear-linear(to right, #ffffff ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
+                    background: `linear-gradient(to right, #ffffff ${progress}%, rgba(255,255,255,0.2) ${progress}%)`,
                   }}
                 />
                 <div className="flex justify-between text-xs text-zinc-400 mt-1">
                   <span>
                     {formatTime(
-                      (progress / 100) * (currentSong.duration_ms || 0),
+                      duration > 0 ? (progress / 100) * duration : (progress / 100) * (currentSong.duration_ms || 0),
                     )}
                   </span>
-                  <span>{formatTime(currentSong.duration_ms || 0)}</span>
+                  <span>{formatTime(duration > 0 ? duration : (currentSong.duration_ms || 0))}</span>
                 </div>
                 {playbackError && (
                   <div className="mt-1 text-[10px] text-red-400">
@@ -196,7 +226,7 @@ const BottomPlayer: React.FC = () => {
                       onChange={handleVolumeChange}
                       className="w-32 h-1 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                       style={{
-                        background: `linear-linear(to right, #ffffff ${volume}%, rgba(255,255,255,0.2) ${volume}%)`,
+                        background: `linear-gradient(to right, #ffffff ${volume}%, rgba(255,255,255,0.2) ${volume}%)`,
                       }}
                     />
                   </div>

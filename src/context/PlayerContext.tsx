@@ -32,6 +32,7 @@ interface PlayerContextType {
   play: (song: Song) => void;
   playSong: (song: Song) => void;
   pause: () => void;
+  updateCurrentSong: (updates: Partial<Song>) => void;
   togglePlay: () => void;
   setProgress: (progress: number) => void;
   setVolume: (volume: number) => void;
@@ -86,10 +87,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const progressIntervalRef = useRef<number | null>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const pendingAutoPlayRef = useRef(false);
+  const pendingSongIdRef = useRef<string | null>(null);
+  const playTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleAutoNextRef = useRef<() => void>(() => {});
   const searchedSongsRef = useRef<Set<string>>(new Set()); // Track searched songs
   const createYouTubePlayerRef = useRef<(song: Song) => boolean>(() => false); // Ref untuk avoid circular deps
   const currentRecommendationsRef = useRef<string>(""); // Track current song for recommendations
+  const lastFetchIdRef = useRef<string>(""); // Track latest YouTube ID fetch
 
   // Start progress tracking
   const startProgressTracking = useCallback(() => {
@@ -98,22 +102,21 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     progressIntervalRef.current = setInterval(() => {
-      if (playerRef.current && isPlaying && isPlayerReady) {
+      if (playerRef.current) {
         try {
-          const currentTime = playerRef.current.getCurrentTime();
-          const duration = playerRef.current.getDuration();
+          const ct = playerRef.current.getCurrentTime();
+          const dur = playerRef.current.getDuration();
 
-          setCurrentTime(currentTime);
-          if (duration > 0) {
-            const newProgress = (currentTime / duration) * 100;
-            setProgress(newProgress);
+          setCurrentTime(ct);
+          if (dur > 0) {
+            setProgress((ct / dur) * 100);
           }
         } catch (error) {
           console.error("Error updating progress:", error);
         }
       }
     }, 1000);
-  }, [isPlaying, isPlayerReady]);
+  }, []);
 
   // Stop progress tracking
   const stopProgressTracking = useCallback(() => {
@@ -199,9 +202,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             setDuration(duration);
 
             // ⭐ Auto-play langsung jika user request
-            if (pendingAutoPlayRef.current) {
+            // Only auto-play if this song is still the intended one
+            if (pendingAutoPlayRef.current && pendingSongIdRef.current === song.id) {
               console.log("Auto-playing from onReady...");
               pendingAutoPlayRef.current = false;
+              pendingSongIdRef.current = null;
 
               try {
                 event.target.playVideo();
@@ -237,7 +242,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             console.error("YouTube Player Error:", error);
             console.error("Error code:", error.data);
 
-            // ⭐ Handle common YouTube errors
             const errorMessages: Record<number, string> = {
               2: "Invalid video ID",
               5: "HTML5 player error - video format not supported",
@@ -250,7 +254,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
               errorMessages[error.data] || "Unable to play this song";
             setPlaybackError(errorMsg);
 
-            // ⭐ Try to fetch YouTube ID dari backend untuk video yang tidak ditemukan
             if (
               song &&
               (error.data === 2 ||
@@ -264,30 +267,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
                 );
                 setPlaybackError("Fetching song source...");
 
-                // Mark sebagai sudah di-search
                 searchedSongsRef.current.add(song.id);
+                lastFetchIdRef.current = song.id;
 
-                // Fetch YouTube ID dari backend
                 songResourceApiYoutube({ id: song.id })
                   .then((result) => {
-                    // ⭐ Check jika ada video_id yang valid
+                    if (lastFetchIdRef.current !== song.id) return;
+
                     if (result.data?.video_id && result.data.video_id.trim()) {
                       console.log(
                         `Found YouTube ID: ${result.data.video_id} for "${song.title}"`,
                       );
 
-                      // Update current song dengan YouTube ID dari backend
                       const updatedSong = {
                         ...song,
                         youtube_id: result.data.video_id,
                       };
                       setCurrentSong(updatedSong);
 
-                      // Set auto-play flag dan buat player baru via ref
                       pendingAutoPlayRef.current = true;
+                      pendingSongIdRef.current = updatedSong.id;
                       createYouTubePlayerRef.current(updatedSong);
                     } else {
-                      // ⭐ No video_id found (status: not_found atau empty)
                       console.warn(
                         `No YouTube ID available for "${song.title}" - skipping...`,
                       );
@@ -295,35 +296,24 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
                         `Cannot play "${song.title}" - no source - skipping...`,
                       );
 
-                      // Skip ke lagu berikutnya immediately
                       setTimeout(() => {
                         handleAutoNextRef.current();
                       }, 1500);
                     }
                   })
                   .catch((err: any) => {
-                    // ⭐ Fetch error (network, server error, etc)
-                    console.error("Error fetching YouTube ID:", err);
-                    
-                    // Check if 404 specifically
-                    if (err.response?.status === 404) {
-                      setPlaybackError(
-                        `"${song.title}" not available - skipping...`,
-                      );
-                    } else {
-                      setPlaybackError(
-                        "Error fetching song source - skipping...",
-                      );
-                    }
+                    if (lastFetchIdRef.current !== song.id) return;
 
-                    // Skip ke lagu berikutnya
+                    console.error("Error fetching YouTube ID:", err);
+
+                    setPlaybackError(`"${song.title}" not available - skipping...`);
+
                     setTimeout(() => {
                       handleAutoNextRef.current();
                     }, 1500);
                   });
 
               } else {
-                // Already tried, just skip
                 console.log(
                   `Already tried fetching YouTube ID for "${song.title}", skipping...`,
                 );
@@ -397,12 +387,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log(`Playing song ${index + 1}/${queue.length}:`, song.title);
 
       if (song.youtube_id) {
-        // Set auto-play flag for seamless transition
         pendingAutoPlayRef.current = true;
+        pendingSongIdRef.current = song.id;
         createYouTubePlayer(song);
       } else {
         console.warn("No YouTube ID for song");
-        // Fallback logic bisa ditambahkan di sini
       }
     },
     [queue, createYouTubePlayer],
@@ -426,37 +415,54 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     (song: Song) => {
       console.log("🎵 Play song requested:", song.title);
 
-      // ⭐ STOP PLAYBACK IMMEDIATELY
+      // Cancel previous play timeout if any
+      if (playTimeoutRef.current) {
+        clearTimeout(playTimeoutRef.current);
+        playTimeoutRef.current = null;
+      }
+
+      // ⭐ STOP PLAYBACK IMMEDIATELY - destroy entire player
+      stopProgressTracking();
       if (playerRef.current) {
         try {
           playerRef.current.stopVideo?.();
           playerRef.current.pauseVideo?.();
+          playerRef.current.destroy?.();
         } catch (e) {
           console.warn("Error stopping current playback:", e);
         }
+        playerRef.current = null;
       }
 
       // ⭐ Reset all state
       setIsPlaying(false);
-      stopProgressTracking();
+      setIsPlayerReady(false);
       setProgress(0);
       setCurrentTime(0);
+      setDuration(0);
+      setPlaybackError(null);
 
       // Tandai bahwa ini aksi langsung dari user
       pendingAutoPlayRef.current = true;
+      pendingSongIdRef.current = song.id;
 
       // ⭐ RESET QUEUE dan Play single song
       setQueue([song]);
       setCurrentIndex(0);
       setCurrentSong(song);
 
-      console.log("Creating player for song with ID:", song.youtube_id);
+      // Reset shuffle state
+      setIsShuffled(false);
+      setOriginalQueue([]);
 
       if (song.youtube_id) {
-        // Small delay untuk ensure proper cleanup sebelum create player baru
-        setTimeout(() => {
+        console.log("Creating player for song with ID:", song.youtube_id);
+        playTimeoutRef.current = setTimeout(() => {
+          playTimeoutRef.current = null;
           createYouTubePlayer(song);
         }, 50);
+      } else {
+        console.warn("No YouTube ID for song:", song.title);
       }
 
       // ⭐ FETCH RECOMMENDATIONS ASYNCHRONOUSLY
@@ -476,12 +482,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
                 `Loaded ${recommendations.length} recommendations for "${song.title}"`,
               );
 
-              // Extract songs dari recommendations
               const recommendedSongs = recommendations.map((rec) => rec.song);
 
-              // Add to queue (append ke queue yang sekarang sudah punya 1 song)
               setQueue((prevQueue) => {
-                // Hanya tambah jika masih song yang sama yang sedang di-play
                 if (prevQueue[0]?.id === song.id) {
                   return [prevQueue[0], ...recommendedSongs];
                 }
@@ -491,7 +494,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           })
           .catch((err) => {
             console.warn("Failed to fetch recommendations:", err);
-            // Continue playing without recommendations
           });
       }
     },
@@ -514,13 +516,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     if (isPlaying) {
       pause();
     } else {
+      setPlaybackError(null);
       if (playerRef.current && isPlayerReady) {
         playerRef.current.playVideo();
         setIsPlaying(true);
         startProgressTracking();
       } else if (currentSong.youtube_id) {
-        // Jika player belum ready, buat ulang dan tandai bahwa user minta auto-play
         pendingAutoPlayRef.current = true;
+        pendingSongIdRef.current = currentSong.id;
         createYouTubePlayer(currentSong);
       }
     }
@@ -597,17 +600,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const prevSong = useCallback(() => {
     console.log("Previous song requested");
 
+    // If more than 3 seconds in, restart current song
+    if (currentTime > 3 && currentSong) {
+      console.log("Restarting current song");
+      if (playerRef.current && isPlayerReady) {
+        playerRef.current.seekTo(0, true);
+        setCurrentTime(0);
+        setProgress(0);
+      }
+      return;
+    }
+
     const prevIndex = getPrevIndex();
     console.log("Previous index:", prevIndex);
 
     if (prevIndex !== -1) {
       playAtIndex(prevIndex);
     } else {
-      // Start of queue
       console.log("Start of queue");
       playAtIndex(0);
     }
-  }, [getPrevIndex, playAtIndex]);
+  }, [getPrevIndex, playAtIndex, currentTime, currentSong, isPlayerReady]);
 
   // Clear player
   const clearPlayer = useCallback(() => {
@@ -676,12 +689,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const clearQueue = useCallback(() => {
+    if (playerRef.current) {
+      try {
+        playerRef.current.stopVideo?.();
+        playerRef.current.pauseVideo?.();
+        playerRef.current.destroy?.();
+      } catch (e) {
+        console.warn("Error stopping player:", e);
+      }
+      playerRef.current = null;
+    }
+    stopProgressTracking();
     setQueue([]);
     setCurrentIndex(-1);
     setCurrentSong(null);
     setIsPlaying(false);
+    setIsPlayerReady(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
+    setPlaybackError(null);
     console.log("Queue cleared");
-  }, []);
+  }, [stopProgressTracking]);
 
   const shuffleQueue = useCallback(() => {
     if (isShuffled) {
@@ -722,6 +751,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setRepeatMode(mode);
     console.log(`Repeat mode set to: ${mode}`);
   }, []);
+
+  const updateCurrentSong = useCallback((updates: Partial<Song>) => {
+    setCurrentSong((prev) => prev ? { ...prev, ...updates } : null);
+    setQueue((prev) => prev.map((s) =>
+      s.id === currentSong?.id ? { ...s, ...updates } : s
+    ));
+  }, [currentSong]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -769,6 +805,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       playSong: play,
       pause,
       togglePlay,
+      updateCurrentSong,
       setProgress: setProgressHandler,
       setVolume,
       seekTo,
@@ -792,7 +829,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       volume,
       currentTime,
       duration,
-      playbackError, // ⭐ Add to dependencies
+      playbackError,
       queue,
       currentIndex,
       isShuffled,
@@ -800,6 +837,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       play,
       pause,
       togglePlay,
+      updateCurrentSong,
       setProgressHandler,
       setVolume,
       seekTo,

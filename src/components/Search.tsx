@@ -8,6 +8,7 @@ import useApi from "../apis/api";
 import type { Song } from "../apis/models/models";
 import LoadingSpinner from "./common/LoadingSpinner";
 import { searchSongsApi } from "../apis/endpoints/serach";
+import { songResourceApiYoutube } from "../apis/endpoints/song";
 
 interface SearchComponentProps {
   onSongClick?: (song: Song) => void;
@@ -177,11 +178,19 @@ const SearchComponent: React.FC<SearchComponentProps> = ({ onSongClick }) => {
           play(song);
           await handlePlay(song);
         } else {
-          // Handle song without YouTube ID
           toast.info("Mencari sumber audio...");
+          const result = await songResourceApiYoutube({ id: song.id });
+          if (result.data?.video_id) {
+            const updatedSong = { ...song, youtube_id: result.data.video_id };
+            play(updatedSong);
+            await handlePlay(updatedSong);
+          } else {
+            toast.error("Sumber audio tidak ditemukan untuk lagu ini");
+          }
         }
       } catch (error) {
         console.error("Play error:", error);
+        toast.error("Gagal memutar lagu");
       }
     },
     [play, handlePlay],

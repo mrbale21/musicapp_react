@@ -19,6 +19,7 @@ import { useMusicPlayer } from "../hooks/useMusicPlayer";
 import { useSongInteractions } from "../hooks/useSongsInteractions";
 import { usePlayer } from "../context/PlayerContext";
 import { songUseLikesApi } from "../apis/endpoints/songlike";
+import { songResourceApiYoutube } from "../apis/endpoints/song";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -96,6 +97,14 @@ const LikedSongsPage = () => {
           await handlePlay(song);
         } else {
           toast.info("Mencari sumber audio...");
+          const result = await songResourceApiYoutube({ id: song.id });
+          if (result.data?.video_id) {
+            const updatedSong = { ...song, youtube_id: result.data.video_id };
+            play(updatedSong);
+            await handlePlay(updatedSong);
+          } else {
+            toast.error("Sumber audio tidak ditemukan");
+          }
         }
       } catch (error) {
         console.error("Play error:", error);
@@ -198,7 +207,7 @@ const LikedSongsPage = () => {
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/home')}
               className="w-10 h-10 bg-black/60 backdrop-blur-sm border border-pink-500/30 rounded-full flex items-center justify-center active:bg-pink-900/30 transition-all active:scale-95"
             >
               <ChevronLeft className="w-5 h-5 text-white" />

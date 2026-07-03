@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  User,
   Mail,
   Calendar,
   Music,
@@ -12,12 +11,15 @@ import {
   ChevronRight,
   Star,
   Clock,
+  User,
 } from "lucide-react";
 import { useUserData } from "../hooks/zustand";
 import ConfirmAlert from "../components/common/ConfirmAlert";
 import useApi from "../apis/api";
 import { songUsePlaysApi } from "../apis/endpoints/songlike";
+import { client } from "../apis/client";
 import type { PlayItem } from "../apis/models/models";
+import type { UserModel } from "../apis/models/user";
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,10 +58,20 @@ const ProfilePage: React.FC = () => {
   // Fetch data on mount
   useEffect(() => {
     playsSongsApi.process({});
+    // Refresh user data (likes count etc)
+    client
+      .get("/auth/me")
+      .then((res) => {
+        const freshUser = res.data?.data as UserModel;
+        if (freshUser) {
+          setUser(freshUser);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleBack = () => {
-    navigate(-1);
+    navigate("/home");
   };
 
   const formatDate = (dateString: string) => {
